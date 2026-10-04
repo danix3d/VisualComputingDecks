@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geometric Transformations</title>
+  <link rel="icon" href="data:,">
+  <script type="module" crossorigin src="./assets/transformations-BBOJpi_b.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/meshwarp-BSD_dXp_.js">
+  <link rel="stylesheet" crossorigin href="./assets/meshwarp-ByxN4Krh.css">
+  <link rel="stylesheet" crossorigin href="./assets/transformations-JaYcrr_N.css">
+</head>
+<body>
+<!-- Converted from "W2-1 2D Transformations.key". Positions are slide pixels on the 1920 x 1080 canvas
+     (the Keynote canvas too). Keynote slide numbers are in the comments; 23-29 became one slide. -->
+<div class="reveal">
+<div class="slides">
+
+<!-- K1 ================================================================ -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">2D Geometric<br>Transformations</div>
+</section>
+
+<!-- K2 ================================================================ -->
+<section>
+  <h1 class="title">Geometric Transformations</h1>
+  <ul class="abs bullets" style="left:378px; top:358px; width:1300px">
+    <li>Why do we need them?</li>
+    <li class="sub">Want to define an object in one coordinate system, then place it in another system.</li>
+    <li class="sub">Allow us to create multiple instances of objects.</li>
+    <li class="sub">Animation (time-dependent transformations).</li>
+    <li class="sub">Display using device independent coordinates.</li>
+    <li class="sub">3D viewing (projections).</li>
+  </ul>
+  <aside class="notes">
+    Motivation: modeling (local to world coordinates), instancing, animation, device-independent display,
+    and, in week 3, 3D viewing.
+  </aside>
+</section>
+
+<!-- from 02 Basics (2) ============================================== -->
+<section>
+  <h1 class="title">Basic Geometric Entities</h1>
+  <ul class="abs bullets" style="left:424px; top:230px; width:1000px">
+    <li>Scalars - real numbers</li>
+    <li class="sub">sizes/lengths, angles, parameters</li>
+    <li style="margin-top:44px">Vectors - typically 2D, 3D, 4D</li>
+    <li class="sub">directions</li>
+    <li style="margin-top:44px">Points - typically 2D, 3D, 4D</li>
+    <li class="sub">positions</li>
+  </ul>
+  <ul class="abs bullets" style="left:424px; top:812px; width:1450px">
+    <li>Vectors and Points - same representation, different semantics</li>
+    <li>An <i>affine space</i>: a vector space plus a set of points, with</li>
+    <li class="sub">point + vector = point, and point − point = vector</li>
+  </ul>
+  <div class="demo" data-demo="entity" data-kind="vector" data-left="1250" data-top="358" data-unit="66"></div>
+  <div class="demo" data-demo="entity" data-kind="point" data-left="1250" data-top="562" data-unit="66"></div>
+  <aside class="notes">
+    Most of the work in Computer Graphics involves these three types of geometric entities.
+
+    Although it might seem that vectors and points are identical, since both may be represented as an
+    n-tuple of real numbers, their geometric meaning is very different, and the sets of operations that make
+    sense on vectors and points are different as well, as we shall see in the following slides.
+
+    Let V be a vector space and P be a set of points. Together they define an affine space A: A contains P, and
+    adding any vector in V to any point in P results in another point in P. Also, the difference between any
+    two points in P is a vector in V.
+    No distinguished origin: “all frames are equal”. Still no notion of distances or angles (those come from
+    the dot product, next slide).
+  </aside>
+</section>
+
+<!-- from 02 Basics (5, 6, and the last bullet of 4) ===================== -->
+<section>
+  <h1 class="title">Operations on Vectors</h1>
+  <ul class="abs bullets" style="left:300px; top:262px"><li>Addition</li></ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{u}+\mathbf{v}=[u_1+v_1,\dots,u_n+v_n]^{\mathsf T}" style="left:990px; top:254px"></div>
+  <ul class="abs bullets" style="left:300px; top:372px"><li>Multiplication by a scalar</li></ul>
+  <div class="abs eq" data-scale="5" data-tex="s\,\mathbf{u}=[su_1,\dots,su_n]^{\mathsf T}" style="left:990px; top:364px"></div>
+  <ul class="abs bullets" style="left:300px; top:482px"><li>Dot product</li></ul>
+  <div class="abs eq" data-scale="5"
+       data-tex="\begin{aligned}\mathbf{u}\cdot\mathbf{v}&amp;=\mathbf{u}^{\mathsf T}\mathbf{v}=u_1v_1+\cdots+u_nv_n\\&amp;=\|\mathbf{u}\|\,\|\mathbf{v}\|\cos(\mathbf{u},\mathbf{v})\end{aligned}"
+       style="left:990px; top:470px"></div>
+  <ul class="abs bullets" style="left:300px; top:652px"><li>Length (norm)</li></ul>
+  <div class="abs eq" data-scale="5" data-tex="\|\mathbf{v}\|=\sqrt{\mathbf{v}\cdot\mathbf{v}}=\sqrt{v_1^2+\cdots+v_n^2}" style="left:990px; top:632px"></div>
+  <ul class="abs bullets" style="left:300px; top:772px"><li>Unit vector (pure direction)</li></ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{v}\leftarrow\frac{\mathbf{v}}{\|\mathbf{v}\|}" style="left:990px; top:742px"></div>
+  <ul class="abs bullets" style="left:300px; top:906px; width:1400px">
+    <li><i>Cartesian coordinates</i>: a standard orthonormal basis, of pairwise perpendicular unit vectors</li>
+  </ul>
+  <aside class="notes">
+    Note: our convention in the course is that vectors are column vectors.
+    In some texts, you will see the vectors written as row vectors.
+
+    In the Euclidean space we use the dot-product metric to define the length/size of a vector, and it’s
+    convenient to think of a general vector as size*pure direction, where the pure direction is given by the
+    vector normalized to unit norm.
+
+    The dot product is also used to define the angle between two vectors. Cartesian space: the basis of the
+    vector space (chosen for the frame) consists of unit length orthogonal vectors.
+
+    These are what rigid and similarity transformations preserve (lengths and angles, later in this
+    lecture), and why a rotation matrix is orthonormal: its columns are rotated basis vectors.
+  </aside>
+</section>
+
+<!-- from 02 Basics (8-10, and the 2D line of 13): two points, a line ========== -->
+<section>
+  <h1 class="title">Operations on Points</h1>
+  <ul class="abs bullets" style="left:120px; top:225px; width:1100px">
+    <li>Can’t simply add points to each other…</li>
+    <li class="sub">but can add a vector to a point</li>
+    <li class="sub">and can subtract points</li>
+    <li style="margin-top:40px">Can’t multiply a point by a scalar…</li>
+    <li class="sub">but can take an affine combination of points:</li>
+    <li class="sub" style="margin-top:160px">for all <i class="m">t</i>: the line through <b class="mr">a</b> and <b class="mr">b</b></li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{a}+\mathbf{v}=\mathbf{b}" style="left:960px; top:297px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{v}=\mathbf{b}-\mathbf{a}" style="left:960px; top:376px"></div>
+  <div class="abs eq" data-scale="5"
+       data-tex="\mathbf{c}=(1-t)\,\mathbf{a}+t\,\mathbf{b}=\mathbf{a}+t\,(\mathbf{b}-\mathbf{a})"
+       style="left:216px; top:656px"></div>
+  <div class="demo" data-demo="affine" data-mode="two" data-left="1240" data-top="250" data-unit="85"></div>
+  <div class="abs eq affine-readout" style="left:1240px; top:862px; width:640px; text-align:center"></div>
+  <aside class="notes">
+    Let V be a vector space and P be a set of points. Together they define an affine space A: A contains P,
+    and adding any vector in V to any point in P results in another point in P. Also, the difference between
+    any two points in P is a vector in V.
+
+    We can add vectors to points to obtain other points since this is how an affine space is defined.
+    We can take the difference between two points obtaining a vector, again from the definition of an affine
+    space.
+
+    Adding points or scalar-point multiplication is not defined in an affine space. However a linear
+    combination of points c = sa + tb with weights s+t=1 is really an affine combination:
+    sa + tb = (1 – t)a + tb = a + t(b – a). Therefore, it does have a meaning (yields another point in the
+    space).
+
+    The line through a and b is the set of all their affine combinations, L(t) = a + t(b − a): the same
+    representation in any dimension. Affine transformations preserve affine combinations (later in this
+    lecture), so they map lines to lines. Next: three points, and a plane.
+
+    Demo: drag a and b; drag c along the line (t snaps to 0.05; t &lt; 0 and t &gt; 1 lie outside the segment).
+    The weights of c are shown below the figure. Double-click to reset.
+  </aside>
+</section>
+
+<!-- from 02 Basics (11), as the same slide with three points: a plane ========== -->
+<section>
+  <h1 class="title">Operations on Points</h1>
+  <ul class="abs bullets" style="left:120px; top:225px; width:1100px">
+    <li>Can’t add points to each other…</li>
+    <li class="sub">but can add a vector to a point</li>
+    <li class="sub">and can subtract points</li>
+    <li style="margin-top:40px">Can’t multiply a point by a scalar…</li>
+    <li class="sub">but can take an affine combination of points:</li>
+    <li class="sub" style="margin-top:160px">for all <span class="mr"><i>α</i>, <i>β</i>, <i>γ</i></span>: the plane through <b class="mr">a</b>, <b class="mr">b</b> and <b class="mr">c</b></li>
+    <li style="margin-top:40px">For <i class="m">n</i> points, <span class="mr">Σ<i>α<sub>i</sub></i><b>p</b><sub><i>i</i></sub></span> is a point if <span class="mr">Σ<i>α<sub>i</sub></i> = 1</span>,<br>and a vector if <span class="mr">Σ<i>α<sub>i</sub></i> = 0</span></li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{a}+\mathbf{v}=\mathbf{b}" style="left:960px; top:297px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{v}=\mathbf{b}-\mathbf{a}" style="left:960px; top:376px"></div>
+  <div class="abs eq" data-scale="5"
+       data-tex="\begin{aligned}\mathbf{p}&amp;=\alpha\,\mathbf{a}+\beta\,\mathbf{b}+\gamma\,\mathbf{c},\qquad\alpha+\beta+\gamma=1\\&amp;=\mathbf{a}+\beta\,(\mathbf{b}-\mathbf{a})+\gamma\,(\mathbf{c}-\mathbf{a})\end{aligned}"
+       style="left:216px; top:636px"></div>
+  <div class="demo" data-demo="affine" data-mode="three" data-left="1240" data-top="250" data-unit="85"></div>
+  <div class="abs eq affine-readout" style="left:1240px; top:862px; width:640px; text-align:center"></div>
+  <aside class="notes">
+    The same slide, with three points. An affine combination of a, b and c, with weights α + β + γ = 1, is
+    again a point: p = a + β(b − a) + γ(c − a), the point a plus a combination of two vectors. Taking all such
+    weights gives the plane through a, b and c (here, the whole 2D plane), just as two points gave a line.
+    Again the same representation in any dimension: in 3D, this is how a plane is spanned by three points.
+
+    By extension, combination of many points (n > 2) are also allowed.
+    Because all weights sum to 1, we can express the first one as (1-a1-a2…-an)
+    Actually, we can also take a combination where the weights sum to 0. This is called a “vector
+    combination” and results in a vector. Proof is left as an exercise.
+
+    Things to show with the demo: p is inside the (shaded) triangle exactly when all three weights are
+    positive; on the line through two of the points, the third weight is 0; at a vertex, its weight is 1.
+    (For you: these are barycentric coordinates. They are not named here; they return in week 7, for
+    interpolating across triangles.)
+
+    Demo: drag a, b, c, and p anywhere (β and γ snap to 0.05); the dashed path is a + β(b − a), then
+    + γ(c − a). The weights of p are shown below the figure. Double-click to reset.
+  </aside>
+</section>
+
+<!-- K3 ================================================================ -->
+<section>
+  <h1 class="title">Transformations in 2D</h1>
+  <ul class="abs bullets" style="left:238px; top:257px; width:1600px">
+    <li>We can think of a geometric object as a set of points:</li>
+    <li class="sub"><i>Boundary representation</i>: the points form the boundary of the object.</li>
+    <li class="sub"><i>Solid representation</i>: the points form the interior of the object.</li>
+    <li class="gap">Question: how do we transform a set of points in the plane?</li>
+  </ul>
+  <div class="demo" data-demo="teaser" data-left="591" data-top="725" data-unit="66"></div>
+  <aside class="notes">
+    Since objects are represented by their point sets, the transformations we are interested in are simply
+    mappings that specify for each point in the plane where it should move.
+
+    Many kinds of such transformations are possible. The most commonly used transformations in graphics are
+    called affine transformations.
+  </aside>
+</section>
+
+<!-- K4 ================================================================ -->
+<section>
+  <h1 class="title">Translation</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>Translate(a,b):</li></ul>
+  <div class="abs eq" data-scale="5.5" data-tex="(x,y)\rightarrow(x+a,y+b)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="translate" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <div class="abs question" style="left:0; width:1920px; top:950px">Do we transform the object, or the coordinate system?</div>
+  <aside class="notes">
+    One way to think about the translate transformation is: a mapping which maps each point (x,y) a units in
+    the x direction and b units in the y direction.
+    Another way to think about it is: a change of coordinate system, which changes the current coordinate
+    system to a new coordinate system, whose origin is at (-a,-b), and with the new axes parallel to the old ones.
+
+    Demo: drag the white knob (the house's corner at the origin); a and b snap to whole units.
+    Double-click the right grid to reset to Translate(2,3).
+  </aside>
+</section>
+
+<!-- K5 ================================================================ -->
+<section>
+  <h1 class="title">Scaling</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>Scale(a,b):</li></ul>
+  <div class="abs eq" data-scale="5.5" data-tex="(x,y)\rightarrow(ax,by)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="scale" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <aside class="notes">
+    Once again, this can be viewed as scaling the object by a in the x direction, and b along the y direction,
+    but also as scaling the axes of the coordinate system by 1/a and 1/b.
+
+    Demo: drag the knob on the top of the right wall; a and b snap to quarters.
+    Double-click to reset to Scale(2, 1.5).
+  </aside>
+</section>
+
+<!-- K6 ================================================================ -->
+<section>
+  <h1 class="title">Rotation</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>Rotate(θ):</li></ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="(x,y)\rightarrow(x\cos\theta-y\sin\theta,\;x\sin\theta+y\cos\theta)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="rotate" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <aside class="notes">
+    This mapping rotates the points in the plane around the origin by theta. In graphics, the convention is
+    usually that the positive rotation is counter-clockwise
+
+    Demo: drag the knob on the roof's apex around the origin; θ snaps to 5°.
+    Double-click to reset to Rotate(45).
+  </aside>
+</section>
+
+<!-- K7 ================================================================ -->
+<section>
+  <h1 class="title">Rotation: derivation</h1>
+  <div class="demo" data-demo="rotderiv" data-left="620" data-top="205" data-unit="112"></div>
+  <div class="abs eq" data-scale="5.4"
+       data-tex="\begin{alignedat}{2}x&amp;=\colorbox{#72986C}{$r\cos\alpha$}&amp;\qquad\qquad y&amp;=\colorbox{#678FC1}{$r\sin\alpha$}\\x'&amp;=r\cos(\alpha+\theta)&amp;y'&amp;=r\sin(\alpha+\theta)\\x'&amp;=\colorbox{#72986C}{$r\cos\alpha$}\cos\theta-\colorbox{#678FC1}{$r\sin\alpha$}\sin\theta\quad&amp;&amp;\cdots\\x'&amp;=x\cos\theta-y\sin\theta&amp;y'&amp;=x\sin\theta+y\cos\theta\end{alignedat}"
+       style="left:0; width:1920px; top:700px; text-align:center"></div>
+  <aside class="notes">
+    Proof:
+    x = r cos(a)              y = r sin(a)
+    x’ = r cos(theta+a)    y = r sin(theta+a)
+
+    x’ = r cos(theta+a) = r cos(theta) cos(a) - r sin(theta) sin(a) =
+        = x cos(theta)  -  y sin(theta)
+
+    y’ = r sin(theta+a) = r sin(theta) cos(a)  + r cos(theta) sin(a) =
+       = x sin(theta) + y cos(theta)
+
+    Demo: drag the point (x, y) to change r and α, and the rotated point to change θ.
+    Double-click the diagram to reset.
+  </aside>
+</section>
+
+<!-- K8 ================================================================ -->
+<section>
+  <h1 class="title">Shearing</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>ShearX(a):</li></ul>
+  <div class="abs eq" data-scale="5.5" data-tex="(x,y)\rightarrow(x+ay,y)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="shearx" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <aside class="notes">
+    A shear along x moves each point horizontally, in proportion to its height: points on the x axis stay
+    put, and every horizontal line slides by a times its y. Areas are preserved.
+
+    Demo: drag the knob on the top-left corner sideways; a snaps to quarters. Double-click to reset to ShearX(1).
+  </aside>
+</section>
+
+<!-- K9 ================================================================ -->
+<section>
+  <h1 class="title">Shearing</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>ShearY(b):</li></ul>
+  <div class="abs eq" data-scale="5.5" data-tex="(x,y)\rightarrow(x,y+bx)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="sheary" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <aside class="notes">
+    The same along y: each point moves vertically by b times its x; points on the y axis stay put.
+
+    Demo: drag the knob on the bottom-right corner up and down. Double-click to reset to ShearY(1).
+  </aside>
+</section>
+
+<!-- K10 =============================================================== -->
+<section>
+  <h1 class="title">Shearing</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>Shear(a,b):</li></ul>
+  <div class="abs eq" data-scale="5.5" data-tex="(x,y)\rightarrow(x+ay,bx+y)"
+       style="left:0; width:1920px; top:360px; text-align:center"></div>
+  <div class="demo" data-demo="pair" data-kind="shear" data-left="340" data-top="470" data-size="440" data-gap="360"></div>
+  <aside class="notes">
+    The general shear combines both. Follow the two marked vertices: the white one, (3,0), goes to (3,3b);
+    the black one, the apex, moves by a times its height along x and by b times its x along y.
+    Unlike the single shears, this one does not preserve area in general (its determinant is 1 − ab).
+
+    Demo: the black and white dots on the right are the knobs: drag the black one sideways to change a,
+    the white one up and down to change b. Double-click to reset to Shear(2,3).
+  </aside>
+</section>
+
+<!-- K11 =============================================================== -->
+<section>
+  <h1 class="title">Matrix Notation</h1>
+  <ul class="abs bullets" style="left:280px; top:275px; width:1450px">
+    <li>Let’s write a point (x,y) as a column vector of length 2:</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}x\\y\end{bmatrix}" style="left:696px; top:362px"></div>
+  <ul class="abs bullets" style="left:280px; top:620px; width:1450px">
+    <li>What happens when this vector is multiplied by a 2 by 2 matrix?</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}a&amp;b\\c&amp;d\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}=\begin{bmatrix}ax+by\\cx+dy\end{bmatrix}"
+       style="left:696px; top:704px"></div>
+  <aside class="notes">
+    Every transformation so far, except translation, is linear: x′ and y′ are linear combinations of x and y,
+    so it is a 2×2 matrix times the point. The next slides write each one in this form.
+  </aside>
+</section>
+
+<!-- K12 =============================================================== -->
+<section>
+  <h1 class="title">Scaling</h1>
+  <ul class="abs bullets" style="left:424px; top:342px"><li>Scale(a,b):</li></ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}a&amp;0\\0&amp;b\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}=\begin{bmatrix}ax\\by\end{bmatrix}"
+       style="left:0; width:1920px; top:466px; text-align:center"></div>
+  <ul class="abs bullets" style="left:424px; top:686px; width:1300px">
+    <li>Uniform scaling:&nbsp; when a and b are equal.</li>
+    <li>What does the determinant of this matrix tell us?</li>
+    <li>What happens when a or b are negative?</li>
+  </ul>
+  <aside class="notes">
+    The determinant tells us the factor by which the area would be expanded or shrunk after the scaling
+    transformation.
+    When a is negative, we get reflection about the X axis;
+    When b is negative, we get reflection about the Y axis;
+    If both are negative the plane is reflected through its origin.
+  </aside>
+</section>
+
+<!-- K13 =============================================================== -->
+<section>
+  <h1 class="title">Reflection</h1>
+  <ul class="abs bullets" style="left:270px; top:343px; width:700px">
+    <li>reflection through the y axis:</li>
+    <li style="margin-top:112px">reflection through the x axis:</li>
+    <li style="margin-top:112px">reflection through y = x:</li>
+    <li style="margin-top:112px">reflection through y = -x:</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}-1&amp;0\\0&amp;1\end{bmatrix}" style="left:1000px; top:302px"></div>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}1&amp;0\\0&amp;-1\end{bmatrix}" style="left:1000px; top:474px"></div>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}0&amp;1\\1&amp;0\end{bmatrix}" style="left:1000px; top:646px"></div>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}0&amp;-1\\-1&amp;0\end{bmatrix}" style="left:1000px; top:818px"></div>
+  <div class="abs eq" data-scale="6" data-tex="\left.\vphantom{\begin{matrix}0\\0\\0\\0\\0\\0\\0\\0\\0\end{matrix}}\right\}" style="left:1290px; top:290px"></div>
+  <div class="abs caption" style="left:1360px; top:568px; width:440px; font-size:50px; line-height:60px">“pure reflection”<br>det = −1</div>
+  <aside class="notes">
+    There are two more reflections that should be mentioned (which are not special cases of a scale
+    transformation): reflection through the lines  y = x  and  y = -x.
+
+    Each of these reflection matrices has a determinant that is identically -1.
+    A reflection with determinant -1 is called a pure reflection.
+    (If two pure reflections about lines passing through the origin are applied successively, the result is
+    a pure rotation about the origin.)
+  </aside>
+</section>
+
+<!-- K14 =============================================================== -->
+<section>
+  <h1 class="title">Rotation, Shearing</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>Rotate(θ):</li></ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}\cos\theta&amp;-\sin\theta\\\sin\theta&amp;\cos\theta\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}=\begin{bmatrix}x\cos\theta-y\sin\theta\\x\sin\theta+y\cos\theta\end{bmatrix}"
+       style="left:0; width:1920px; top:372px; text-align:center"></div>
+  <ul class="abs bullets" style="left:424px; top:603px"><li>Shear(a,b):</li></ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}1&amp;a\\b&amp;1\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}=\begin{bmatrix}x+ay\\bx+y\end{bmatrix}"
+       style="left:0; width:1920px; top:704px; text-align:center"></div>
+  <aside class="notes">
+    What would the matrix be for a rotation by -theta? The same, with the minus sign changing position. So the
+    two matrices are transposes of each other.
+
+    What would be the product of these two matrices? The identity matrix (not surprisingly). This means that
+    rotation matrices are orthonormal.
+    Their determinant is 1.
+  </aside>
+</section>
+
+<!-- K15 =============================================================== -->
+<section>
+  <h1 class="title">Translation</h1>
+  <ul class="abs bullets" style="left:330px; top:244px"><li>Translate(a,b):</li></ul>
+  <ul class="abs bullets" style="left:330px; top:382px; width:1340px">
+    <li>Problem: cannot represent translation using 2 by 2 matrices!</li>
+    <li style="margin-top:10px">Solution: <i>homogeneous coordinates!</i> Embed the affine space of dimension n in a space of dimension n+1</li>
+    <li class="sub" style="margin-top:10px"><span class="mr">(<i>x</i>, <i>y</i>) → (<i>x</i>, <i>y</i>, 1)</span></li>
+  </ul>
+  <ul class="abs bullets" style="left:330px; top:712px; width:1400px">
+    <li>Use a 3 by 3 linear transformation in homogeneous coords:</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}x\\y\end{bmatrix}\rightarrow\begin{bmatrix}x+a\\y+b\end{bmatrix}"
+       style="left:805px; top:205px"></div>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}1&amp;0&amp;a\\0&amp;1&amp;b\\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}\rightarrow\begin{bmatrix}x+a\\y+b\\1\end{bmatrix}"
+       style="left:0; width:1920px; top:800px; text-align:center"></div>
+  <aside class="notes">
+    The idea behind homogeneous coordinates is to embed the affine space in a space of a higher dimension,
+    dimension n+1.
+    The embedding of a point (x,y) is this higher dimensional space is done by appending a third coordinate,
+    more specifically 1.
+  </aside>
+</section>
+
+<!-- K16 =============================================================== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <ul class="abs bullets" style="left:300px; top:312px; width:1400px">
+    <li>A point in the projective plane <span class="mr"><i>P</i><sup>2</sup></span> is represented by 3 coordinates, at least one of which is non-zero.</li>
+    <li>Two 3-vectors <b class="mr">a</b>,<b class="mr">b</b> represent the same point in <span class="mr"><i>P</i><sup>2</sup></span> iff <span class="mr"><b>a</b> = <i>h</i><b>b</b></span>, where <i class="m">h</i> is a non-zero scalar.</li>
+    <li>A 2D point <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx,hy,h</i>)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x,y,</i>1)</span>.<br>Note: this is a one-to-many correspondence!</li>
+    <li>Geometric interpretation: each point <span class="mr">(<i>x,y</i>)</span> corresponds to a ray in 3D, from the origin <span class="mr">(0,0,0)</span> through the point <span class="mr">(<i>x,y,</i>1)</span></li>
+  </ul>
+  <aside class="notes">
+    Projective spaces: A point of an n-dimensional projective space, P^n, is represented by an n+1 vector of
+    coordinates, where at least of coordinate is non zero.These coordinates are called the homogeneous or
+    projective coordinates of the point. Two n+1 vectors a,b represent the same point iff there exists a nonzero
+    scalar λ, such that  λa = b.Thus, the correspondence between points and homogeneous coordinates is one to many.
+
+    Theorem: The space P^m is topologically equivalent to the unit sphere S^m of R^(m+1) in which we have
+    identified antipodal points. P^1 - the projective line. Topologically equivalent to a unit circle. P^2 - the
+    projective plane. Topologically equivalent to a sphere.
+
+    Principle of duality: there is no difference between points and lines in P^2. A point can be thought of as
+    the set of all lines passing through it. A line can be thought of as the set of all points on it. Let x be
+    the coordinates of the point, and u be the coefficients of the line equation. The equation uTx = 0 defines
+    the set of lines through a point, and also a set of points on a line. (This is too complicated. Stolfi had a
+    more intuitive explanation).
+  </aside>
+</section>
+
+<!-- K17, part 1: points (the direction comes after K18) ============== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <div class="demo" data-demo="projplane" data-direction="hide" data-left="300" data-top="200" data-w="1320" data-h="860"
+       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
+  <aside class="notes">
+    Geometrically, we can think of points with a homogeneous coordinate as 3D points that live in a special
+    space: the projective plane.
+
+    Let’s embed the 2D plane in a 3D space, by adding a third axis, which we will call W.
+
+    Now, all of the 2D points will in fact live on the W=1 plane, so a location (x,y) will actually be
+    represented by the three coordinates (x,y,1)
+
+    Furthermore, in the projective plane, all the points of the form (hx, hy, h), i.e. on the ray that goes
+    from the origin through (x,y,1) are considered equivalent, corresponding to the same 2D point
+    (x,y). h must be non-zero.
+
+    Demo: the labels show the actual coordinates. Drag the background to turn the view; drag (x,y,1) across the
+    W=1 plane (x and y snap to 0.05); drag (hx,hy,h) along the ray to see h scale all three coordinates.
+    Double-click to reset.
+  </aside>
+</section>
+
+<!-- K18 =============================================================== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <ul class="abs bullets" style="left:300px; top:404px; width:1400px">
+    <li>A 2D vector <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx, hy,</i> 0)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x, y,</i> 0)</span>.</li>
+    <li>A 3-vector whose 3<sup>rd</sup> coordinate is 0 has two geometric interpretations (which are really the same):</li>
+    <li class="sub">A direction</li>
+    <li class="sub">A point at infinity</li>
+  </ul>
+  <aside class="notes">
+    Next slide, in the picture: (x, y, 0) is the ray that stays in the plane W = 0. It never meets W = 1, so
+    it is not a finite point; it is the direction (x, y), or equivalently the point at infinity in that
+    direction. Translations will not affect it, as the following slides show.
+  </aside>
+</section>
+
+<!-- K17, part 2: the direction (x,y,0) ================================ -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <div class="demo" data-demo="projplane" data-direction="show" data-left="300" data-top="200" data-w="1320" data-h="860"
+       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
+  <aside class="notes">
+    When the third homogeneous coordinate is 0, the ray stays in the XY plane (W=0), so it has no
+    intersection with the W=1 plane and thus does not correspond to any finite point. But we can think of it as
+    a point in infinity whose direction from the origin is given by the vector (x,y). Thus, vectors/directions
+    in the affine space may be represented by triplets of the form (x,y,0).
+
+    Demo: as two slides ago, now with the direction (x,y,0) in the plane W=0, below (x,y,1) (dashed).
+    Drag (x,y,1) and the direction follows. Double-click to reset.
+  </aside>
+</section>
+
+
+<!-- K19 =============================================================== -->
+<section>
+  <h1 class="title">Homogeneous Coordinates</h1>
+  <ul class="abs bullets" style="left:140px; top:244px"><li>Translate(a,b):</li></ul>
+  <div class="abs eq" data-scale="4.6"
+       data-tex="\begin{bmatrix}1&amp;0&amp;a\\0&amp;1&amp;b\\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}x+a\\y+b\\1\end{bmatrix}"
+       style="left:216px; top:320px"></div>
+  <ul class="abs bullets" style="left:140px; top:590px"><li>Scale(a,b):</li></ul>
+  <div class="abs eq" data-scale="4.6"
+       data-tex="\begin{bmatrix}a&amp;0&amp;0\\0&amp;b&amp;0\\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}ax\\by\\1\end{bmatrix}"
+       style="left:216px; top:666px"></div>
+  <ul class="abs bullets" style="left:860px; top:244px"><li>Shear(a,b):</li></ul>
+  <div class="abs eq" data-scale="4.6"
+       data-tex="\begin{bmatrix}1&amp;a&amp;0\\b&amp;1&amp;0\\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}x+ay\\bx+y\\1\end{bmatrix}"
+       style="left:936px; top:320px"></div>
+  <ul class="abs bullets" style="left:860px; top:590px"><li>Rotate(θ):</li></ul>
+  <div class="abs eq" data-scale="4.6"
+       data-tex="\begin{bmatrix}\cos\theta&amp;-\sin\theta&amp;0\\\sin\theta&amp;\cos\theta&amp;0\\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}x\cos\theta-y\sin\theta\\x\sin\theta+y\cos\theta\\1\end{bmatrix}"
+       style="left:936px; top:666px"></div>
+  <aside class="notes">
+    The same four transformations as 3×3 matrices acting on (x, y, 1). The linear ones keep their 2×2 block in
+    the upper left; translation now fits too, in the third column. The last row is always [0 0 1].
+  </aside>
+</section>
+
+<!-- K21 =============================================================== -->
+<section>
+  <h1 class="title">Combining Transformations</h1>
+  <ul class="abs bullets" style="left:424px; top:257px; width:1160px">
+    <li>A sequence of transformations can be collapsed into a single matrix using matrix multiplication:</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="T_1T_2T_3\begin{bmatrix}x\\y\\1\end{bmatrix}=T_{1,2,3}\begin{bmatrix}x\\y\\1\end{bmatrix}"
+       style="left:0; width:1920px; top:412px; text-align:center"></div>
+  <ul class="abs bullets" style="left:424px; top:657px; width:1300px">
+    <li>Is the order of transformations important?</li>
+  </ul>
+  <aside class="notes">
+    Order is important since matrix multiplication is not commutative, in general. For example, non-uniform
+    scaling followed by a rotation is not the same as rotating first and then scaling.
+  </aside>
+</section>
+
+<!-- K22 =============================================================== -->
+<section>
+  <h1 class="title">Example 1</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>How to rotate about an arbitrary point ?</li></ul>
+  <div class="demo" data-demo="steps" data-example="pivot" data-left="569" data-top="335" data-unit="46"></div>
+  <div class="abs eq step-formula" style="left:0; width:1920px; top:945px; text-align:center"></div>
+  <span class="fragment" data-fragment-index="1"></span>
+  <span class="fragment" data-fragment-index="2"></span>
+  <span class="fragment" data-fragment-index="3"></span>
+  <aside class="notes">
+    So far, rotations occurred about the origin. Now we can rotate about any point in the plane.
+    First, we translate the object such that the chosen point becomes the origin;
+    Second, we rotate the translated object around the origin;
+    Third, we translate back;
+
+    Demo: the dashed outline is the goal. Each arrow key applies the next step, animated, and the composite
+    matrix builds up below. Before the first step, drag the pivot, or the knob on the goal's apex to change θ.
+  </aside>
+</section>
+
+<!-- K23-29 ============================================================ -->
+<section>
+  <h1 class="title">Example 2</h1>
+  <ul class="abs bullets" style="left:424px; top:257px"><li>How to reflect through an arbitrary line ?</li></ul>
+  <div class="demo" data-demo="steps" data-example="mirror" data-left="569" data-top="335" data-unit="46"></div>
+  <div class="abs eq step-formula" style="left:0; width:1920px; top:945px; text-align:center"></div>
+  <span class="fragment" data-fragment-index="1"></span>
+  <span class="fragment" data-fragment-index="2"></span>
+  <span class="fragment" data-fragment-index="3"></span>
+  <span class="fragment" data-fragment-index="4"></span>
+  <span class="fragment" data-fragment-index="5"></span>
+  <aside class="notes">
+    Reflection through an arbitrary line:
+    First, we translate object such that the line goes through the origin;
+    Rotate such that line coincides with one of the axes;
+    Reflect through the above axis;
+    Apply inverse rotation, followed by inverse translation;
+
+    Demo (replaces Keynote slides 23-29): the dashed outline is the goal. Five arrow-key steps: translate,
+    rotate, reflect (S(1,−1), from the scaling slide), rotate back, translate back. Before the first step,
+    drag the knob on the y axis to move the line, the other knob to tilt it.
+  </aside>
+</section>
+
+<!-- K30 =============================================================== -->
+<section>
+  <h1 class="title">Affine Transformations: Definition</h1>
+  <ul class="abs bullets" style="left:424px; top:330px; width:1300px">
+    <li>Let <span class="mr"><i>T</i> : <i>A</i><sub>1</sub> → <i>A</i><sub>2</sub></span>, where <span class="mr"><i>A</i><sub>1</sub></span> and <span class="mr"><i>A</i><sub>2</sub></span> are affine spaces.</li>
+    <li>Then <i class="m">T</i> is said to be an affine transformation if:</li>
+    <li class="sub"><i class="m">T</i> maps vectors to vectors and points to points</li>
+    <li class="sub"><i class="m">T</i> is a linear transformation on vectors</li>
+    <li class="sub">If <b class="mr">p</b> is a point and <b class="mr">u</b> is a vector:<br><span class="mr"><i>T</i>(<b>p</b> + <b>u</b>) = <i>T</i>(<b>p</b>) + <i>T</i>(<b>u</b>)</span></li>
+  </ul>
+  <aside class="notes">
+    Affine transformations map vectors to vectors and points to points. They are linear transformations on
+    vectors but not on points (because of translation). They preserve affine combinations.
+
+    Linear: T(aA + bB) = aT(A) + bT(B)
+    Any linear transformation is an affine one, but not vice versa. Thus affine transformations are a
+    superclass of linear ones.
+  </aside>
+</section>
+
+<!-- K31 =============================================================== -->
+<section>
+  <h1 class="title">Affine Transformations: Properties</h1>
+  <ul class="abs bullets" style="left:424px; top:330px; width:1160px">
+    <li>Affine transformations preserve affine combinations of points. In other words, given an affine transformation <i class="m">T</i> and a point <b class="mr">p</b>:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.8"
+       data-tex="\mathbf{p}=\alpha_1\mathbf{p}_1+\cdots+\alpha_k\mathbf{p}_k"
+       style="left:0; width:1920px; top:578px; text-align:center"></div>
+  <ul class="abs bullets" style="left:424px; top:660px; width:1300px">
+    <li>it holds that:</li>
+    <li>Intersections between lines are preserved.</li>
+    <li>Parallel lines are preserved.</li>
+  </ul>
+  <div class="abs eq" data-scale="4.8"
+       data-tex="T(\mathbf{p})=\alpha_1T(\mathbf{p}_1)+\cdots+\alpha_kT(\mathbf{p}_k)"
+       style="left:777px; top:664px"></div>
+  <aside class="notes">
+    The first property is very important, it means among other things that lines map onto lines under affine
+    transformations (similarly, planes map onto planes). Furthermore, given a line defined as an affine
+    combination of two points a, b, the affine image of this line is defined by the images of these two
+    points: T(a), T(b).
+
+    Another consequence of this property is that parallel lines remain parallel after an affine
+    transformation. If this was not the case, there would be a mutual point on two lines after an affine
+    transformation while there were none before. The mutual point may be expressed as an affine combination of
+    the endpoints of both lines. Since affine combinations are preserved, this means the point must have been
+    mutual already before the transformation: a contradiction.
+
+    A related consequence is that intersection points are preserved by affine transformation. So we either
+    compute an intersection point and then transform it, or transform the lines first and then compute the
+    intersection – the result will be the same.
+  </aside>
+</section>
+
+<!-- K32 =============================================================== -->
+<section>
+  <h1 class="title">Special Cases</h1>
+  <ul class="abs bullets" style="left:200px; top:357px; width:1580px">
+    <li><b class="gill">Note</b>: general affine transformation preserve neither lengths, nor angles.</li>
+    <li><b class="gill"><u>Rigid-body transformations</u></b>:</li>
+    <li class="sub">preserve angles and lengths</li>
+    <li class="sub">an arbitrary sequence of translations and rotations</li>
+    <li><b class="gill"><u>Similarity transformations</u></b>:</li>
+    <li class="sub">preserve angles, but not lengths</li>
+    <li class="sub">rigid transformations + uniform scaling</li>
+  </ul>
+  <aside class="notes">
+    Rigid-body transformations: an arbitrary sequence of translations and rotations. These transformations
+    correspond to 3 by 3 matrices where the lower row is (0,0,1) and the upper left 2 by 2 matrix is orthogonal.
+  </aside>
+</section>
+
+<!-- K20 =============================================================== -->
+<section>
+  <h1 class="title">Homographies</h1>
+  <ul class="abs bullets" style="left:304px; top:257px; width:1400px">
+    <li>All of the 2D transformations we have seen so far can be written:</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5"
+       data-tex="\begin{bmatrix}a&amp;b&amp;m\\c&amp;d&amp;n\\0&amp;0&amp;1\end{bmatrix}"
+       style="left:0; width:1920px; top:346px; text-align:center"></div>
+  <ul class="abs bullets" style="left:304px; top:600px; width:1400px">
+    <li>What happens when the last row is not <span class="mr">[0, 0, 1]</span>?</li>
+  </ul>
+  <div class="abs eq fragment" data-scale="4.3"
+       data-tex="\begin{bmatrix}a&amp;b&amp;m\\c&amp;d&amp;n\\p&amp;q&amp;s\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}ax+by+m\\cx+dy+n\\px+qy+s\end{bmatrix}\;\rightarrow\;\begin{bmatrix}\dfrac{ax+by+m}{px+qy+s}\rule[-1.3em]{0pt}{3.2em}\\\dfrac{cx+dy+n}{px+qy+s}\rule[-1.3em]{0pt}{3.2em}\\1\rule{0pt}{1.4em}\end{bmatrix}"
+       style="left:0; width:1920px; top:684px; text-align:center"></div>
+  <aside class="notes">
+    (Build, on a click: the product with a general last row [p q s]. The third coordinate w = px + qy + s
+    is no longer 1; dividing by it brings the point back to w = 1, and the result is no longer linear in x, y.)
+
+    What if the bottom row is not [0,0,1]?
+
+    If the first two elements, say p and q, are not zero, the geometric interpretation is that the
+    transformation, instead of occurring entirely on the h=1 plane, takes the transformed entity out of that
+    plane, onto the plane
+    h = px + qy + 1
+    Dividing by the homogeneous coordinate projects the transformed object back onto the h = 1 plane. Of
+    course, the object might become distorted.
+    This is similar to the perspective projection that we’ll discuss when we’ll learn about viewing in 3D.
+
+    What is the meaning of having some number s instead of 1 in the lower right corner of the matrix? This
+    number causes overall scaling of the object.
+  </aside>
+</section>
+
+<!-- new: the answer to K20's question ============================== -->
+<section>
+  <h1 class="title">Homographies</h1>
+  <div class="demo" data-demo="homproj" data-left="20" data-top="200" data-w="1010" data-h="860"
+       data-ox="300" data-oy="670" data-unit="235" data-persp="6" data-unit2="205"></div>
+  <div class="abs eq hom-matrix" style="left:1060px; top:228px"></div>
+  <div class="abs demo" style="left:1060px; top:660px; width:390px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-p"></span>
+      <input type="range" name="p" min="-0.6" max="0.6" step="0.1" value="0"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-q"></span>
+      <input type="range" name="q" min="-0.6" max="0.6" step="0.1" value="0"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-s"></span>
+      <input type="range" name="s" min="0.5" max="1.5" step="0.1" value="1"></div>
+  </div>
+  <div class="abs eq" data-scale="4.4"
+       data-tex="(x,y)\mapsto\left(\frac{x}{w},\,\frac{y}{w}\right),\qquad w=px+qy+s"
+       style="left:1060px; top:440px"></div>
+  <div class="abs hom-2d" style="left:1480px; top:600px; width:400px; height:400px"></div>
+  <aside class="notes">
+    The answer to the previous slide's question, with the rest of the matrix set to the identity so that
+    only the last row [p q s] acts. H takes (x, y, 1) to (x, y, w) with w = px + qy + s: out of the plane
+    W = 1 and onto the tilted (dashed) plane W = px + qy + s. Dividing by w slides each point back along
+    its ray through the origin onto W = 1: the filled grid.
+
+    The result is no longer affine: lines stay lines, but parallel lines converge. This is a projective
+    transformation, the perspective projection we will meet when we discuss viewing in 3D.
+    With p = q = 0, s alone scales the whole object by 1/s.
+
+    Demo: move the p, q, s sliders; the 2D panel shows the result in the plane (dashed: the original
+    square). Drag the 3D view to turn it; double-click it to reset. w is kept at least 0.3 over the
+    object (at most a 2.5x magnification), so nothing passes through infinity.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 23) ================================= -->
+<section>
+  <h1 class="title">A Hierarchy of Transformations</h1>
+  <img class="abs" src="./assets/h_translation-CLgFuApe.png" alt="Translation" style="left:72.0px; top:230.4px; width:302.4px; height:302.4px">
+  <div class="abs caption" style="left:43.2px; top:550.8px; width:360px; font-size:46px">Translation</div>
+  <div class="abs caption gray" style="left:43.2px; top:615.6px; width:360px">2 DOF</div>
+  <div class="abs caption" style="left:43.2px; top:676.8px; width:360px; font-size:40px"><i>orientation</i></div>
+  <img class="abs" src="./assets/h_rigid-NYL8Vo5m.png" alt="Rigid" style="left:439.2px; top:230.4px; width:302.4px; height:302.4px">
+  <div class="abs caption" style="left:410.4px; top:550.8px; width:360px; font-size:46px">Rigid</div>
+  <div class="abs caption gray" style="left:410.4px; top:615.6px; width:360px">3 DOF</div>
+  <div class="abs caption" style="left:410.4px; top:676.8px; width:360px; font-size:40px"><i>lengths</i></div>
+  <img class="abs" src="./assets/h_similarity-Xch-tsGQ.png" alt="Similarity" style="left:806.4px; top:230.4px; width:302.4px; height:302.4px">
+  <div class="abs caption" style="left:777.6px; top:550.8px; width:360px; font-size:46px">Similarity</div>
+  <div class="abs caption gray" style="left:777.6px; top:615.6px; width:360px">4 DOF</div>
+  <div class="abs caption" style="left:777.6px; top:676.8px; width:360px; font-size:40px"><i>angles</i></div>
+  <img class="abs" src="./assets/h_affine-CyyiY2E1.png" alt="Affine" style="left:1173.6px; top:230.4px; width:302.4px; height:302.4px">
+  <div class="abs caption" style="left:1144.8px; top:550.8px; width:360px; font-size:46px">Affine</div>
+  <div class="abs caption gray" style="left:1144.8px; top:615.6px; width:360px">6 DOF</div>
+  <div class="abs caption" style="left:1144.8px; top:676.8px; width:360px; font-size:40px"><i>parallelism</i></div>
+  <img class="abs" src="./assets/h_projective-D6ssG94o.png" alt="Projective" style="left:1540.8px; top:230.4px; width:302.4px; height:302.4px">
+  <div class="abs caption" style="left:1512.0px; top:550.8px; width:360px; font-size:46px">Projective</div>
+  <div class="abs caption gray" style="left:1512.0px; top:615.6px; width:360px">8 DOF</div>
+  <div class="abs caption" style="left:1512.0px; top:676.8px; width:360px; font-size:40px"><i>straight lines</i></div>
+  <div class="abs caption" style="left:72px; top:820.8px; width:1776px">Each class keeps everything listed to its right, and each is closed under composition and inversion.</div>
+  <aside class="notes">
+    Rows: degrees of freedom, and the strongest property each class preserves.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 26) ================================= -->
+<section>
+  <h1 class="title">Transformations from Correspondences</h1>
+  <ul class="abs bullets" style="left:259.2px; top:219.6px; width:1584px">
+    <li>Each correspondence <span class="mr">(<i>x</i>, <i>y</i>)</span> ↔ <span class="mr">(<i>x</i>′, <i>y</i>′)</span> gives two equations</li>
+  </ul>
+  <img class="abs" src="./assets/d_corr_a-B_jdPFDX.png" alt="The astronaut photograph, with three marked points" style="left:444.0px; top:324.0px; width:417.6px; height:417.6px">
+  <img class="abs" src="./assets/d_corr_b-BtYUKt7m.png" alt="The same photograph after an affine warp, with the same three points" style="left:1058.4px; top:324.0px; width:417.6px; height:417.6px">
+  <div class="abs caption" style="left:72px; top:774.0px; width:1776px">Minimum number of correspondences:</div>
+  <div class="abs caption" style="left:72px; top:842.4px; width:1776px">translation 1 &nbsp; · &nbsp; rigid 2 &nbsp; · &nbsp; similarity 2 &nbsp; · &nbsp; affine 3 &nbsp; · &nbsp; projective 4</div>
+  <aside class="notes">
+    Degrees of freedom divided by two, rounded up.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 27) ================================= -->
+<section>
+  <h1 class="title">Solving for an Affine Transformation</h1>
+  <div class="abs eq" data-scale="5.2" data-tex="x'=ax+by+m\qquad y'=cx+dy+n"
+       style="left:0; width:1920px; top:237.6px; text-align:center"></div>
+  <ul class="abs bullets" style="left:216.0px; top:360.0px; width:1584px">
+    <li>Each correspondence contributes two rows of a linear system:</li>
+  </ul>
+  <div class="abs eq" data-scale="5"
+       data-tex="\begin{bmatrix}x&amp;y&amp;1&amp;0&amp;0&amp;0\\0&amp;0&amp;0&amp;x&amp;y&amp;1\end{bmatrix}\begin{bmatrix}a\\b\\m\\c\\d\\n\end{bmatrix}=\begin{bmatrix}x'\\y'\end{bmatrix}"
+       style="left:0; width:1920px; top:453.6px; text-align:center"></div>
+  <ul class="abs bullets" style="left:172.8px; top:840px; width:950.4px; font-size:44px">
+    <li>3 correspondences: a 6×6 system, solved exactly</li>
+    <li>More than 3: least squares</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="A\mathbf{t}=\mathbf{b}"
+       style="left:1250px; top:838px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\min_{\mathbf{t}}\;\|A\mathbf{t}-\mathbf{b}\|^2"
+       style="left:1250px; top:922px"></div>
+  <aside class="notes">
+    Stack the two rows per correspondence into A; the unknowns form the vector t.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 28) ================================= -->
+<section>
+  <h1 class="title">Solving for a Homography</h1>
+  <div class="abs eq" data-scale="5" data-tex="x'=\frac{h_{11}x+h_{12}y+h_{13}}{h_{31}x+h_{32}y+h_{33}}\qquad y'=\frac{h_{21}x+h_{22}y+h_{23}}{h_{31}x+h_{32}y+h_{33}}"
+       style="left:0; width:1920px; top:230.4px; text-align:center"></div>
+  <ul class="abs bullets" style="left:216.0px; top:432.0px; width:1440px">
+    <li>Multiply out the denominator:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{aligned}x'\,(h_{31}x+h_{32}y+h_{33})&amp;=h_{11}x+h_{12}y+h_{13}\\y'\,(h_{31}x+h_{32}y+h_{33})&amp;=h_{21}x+h_{22}y+h_{23}\end{aligned}"
+       style="left:0; width:1920px; top:525.6px; text-align:center"></div>
+  <ul class="abs bullets" style="left:216.0px; top:720px; width:1512px; font-size:46px">
+    <li>Still linear in the unknowns <span class="mr"><i>h<sub>ij</sub></i></span>: two equations per correspondence</li>
+    <li><i class="m">H</i> is defined up to scale, so 4 correspondences suffice</li>
+    <li>Details (the DLT) in recitation 2</li>
+  </ul>
+  <aside class="notes">
+    The system is homogeneous; solve with the SVD under ||h|| = 1.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 21) ================================= -->
+<section>
+  <h1 class="title">Where Homographies Arise</h1>
+  <div class="demo" data-demo="homarise" data-kind="plane" data-left="70" data-top="215" data-w="880" data-h="530"
+       data-ox="470" data-oy="455" data-unit="86"></div>
+  <div class="demo" data-demo="homarise" data-kind="rotation" data-left="990" data-top="215" data-w="860" data-h="530"
+       data-ox="200" data-oy="430" data-unit="120"></div>
+  <div class="abs caption" style="left:86.4px; top:763.2px; width:864px">A plane seen in two images</div>
+  <div class="abs caption" style="left:969.6px; top:763.2px; width:864px">A camera rotating about its center</div>
+  <aside class="notes">
+    Figures after Hartley and Zisserman, as used in the IP recitations, redrawn as 3D scenes. The rotation
+    case is why panoramas can be stitched with homographies (week 10).
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 22), live as in the prototype deck ====== -->
+<section>
+  <h1 class="title">Removing Perspective Distortion</h1>
+  <div class="demo" data-demo="homography">
+    <img class="plate" src="./assets/r_calendar_persp-BTBsif0q.png" alt="A calendar photographed at an angle"
+         data-w="900" style="left:70px; top:250px" draggable="false">
+    <div class="abs" data-arrow data-w="120" data-h="61" style="left:1000px; top:478px"></div>
+    <canvas class="gl" data-w="700" style="left:1150px; top:250px"></canvas>
+  </div>
+  <div class="abs caption" style="left:72px; top:878px; width:1776px; font-size:48px">
+    Four point correspondences determine <i class="m">H</i></div>
+  <aside class="notes">
+    Click the four corners, solve for H (next hour), warp. This is part of exercise 1.
+
+    Demo: drag a corner: H is re-solved from the four correspondences (DLT), and the right image is
+    backward-warped with H⁻¹, every pixel, every frame. Double-click the photo to reset the corners.
+    Try a wrong corner to show that H maps any quadrilateral to the rectangle. Photo from the IP recitations.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 29), with the calendar ===================== -->
+<section>
+  <h1 class="title">Forward Warping</h1>
+  <img class="abs" src="./assets/r_calendar_persp-BTBsif0q.png" alt="The calendar photographed at an angle (the source)"
+       style="left:108px; top:230px; height:347px">
+  <div class="demo" data-demo="mapdiagram" data-left="771" data-top="298" data-cell="30" data-gap="90"></div>
+  <div class="abs caption" style="left:731px; width:290px; top:518px; font-size:36px">source</div>
+  <div class="abs caption" style="left:1031px; width:290px; top:518px; font-size:36px">destination</div>
+  <img class="abs warp-img" src="./assets/warp_forward-B88J6Zuw.png" alt="The calendar rectified by forward warping, with black holes, densest at the top" style="left:1341px; top:230px; height:347px">
+  <div class="abs warp-text">
+    <pre class="code">for each source pixel (u, v):
+    (x, y) = T(u, v)
+    dst[round(x, y)] = src[u, v]</pre>
+    <ul class="bullets" style="font-size:46px">
+    <li>Holes, and pixels written twice</li>
+    </ul>
+  </div>
+  <aside class="notes">
+    Forward warping of the calendar photo with the rectifying homography from the previous slides: most
+    destination pixels near the top are never written, because the far part of the calendar is stretched.
+    Near the bottom, where the calendar is compressed, pixels are written twice instead. (The holes are black.)
+    Splatting (spreading each source pixel over its neighbors) patches this but blurs.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 30), with the calendar ===================== -->
+<section>
+  <h1 class="title">Backward Warping</h1>
+  <img class="abs" src="./assets/r_calendar_persp-BTBsif0q.png" alt="The calendar photographed at an angle (the source)"
+       style="left:108px; top:230px; height:347px">
+  <div class="demo" data-demo="mapdiagram" data-backward data-left="771" data-top="298" data-cell="30" data-gap="90"></div>
+  <div class="abs caption" style="left:731px; width:290px; top:518px; font-size:36px">source</div>
+  <div class="abs caption" style="left:1031px; width:290px; top:518px; font-size:36px">destination</div>
+  <img class="abs warp-img" src="./assets/warp_backward-Bv7DYMb3.png" alt="The calendar rectified by backward warping, with no holes" style="left:1341px; top:230px; height:347px">
+  <div class="abs warp-text">
+    <pre class="code">for each destination pixel (x, y):
+    (u, v) = T⁻¹(x, y)
+    dst[x, y] = src(u, v)</pre>
+    <ul class="bullets" style="font-size:46px">
+    <li>Every output pixel gets exactly one value</li>
+    <li>But <span class="mr">(<i>u</i>, <i>v</i>)</span> falls between pixels</li>
+    </ul>
+  </div>
+  <aside class="notes">
+    Requires T to be invertible; for a global transformation that is just the inverse matrix. The same
+    calendar and homography as on the previous slide, now with no holes (bilinear sampling).
+    The open question, what src(u, v) means at a non-integer position, occupies the next part.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 31), live ============================= -->
+<section>
+  <h1 class="title">Interpolation</h1>
+  <ul class="abs bullets" style="left:259px; top:220px; width:1440px">
+    <li>Reconstructing a function from its samples</li>
+  </ul>
+  <div class="demo" data-demo="interp1d" data-left="78" data-top="320" data-unit="72" data-gap="40"></div>
+  <div class="abs caption" style="left:78px; width:562px; top:860px">nearest neighbor</div>
+  <div class="abs caption" style="left:679px; width:562px; top:860px">linear</div>
+  <div class="abs caption" style="left:1280px; width:562px; top:860px">cubic</div>
+  <aside class="notes">
+    The image is a function known only on a grid; resampling asks for its value in between.
+
+    Demo: drag any sample up or down, in any panel; all three reconstructions follow. Double-click to reset.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 32), live ============================= -->
+<section>
+  <h1 class="title">Bilinear Interpolation</h1>
+  <div class="demo" data-demo="bilinearcell" data-left="130" data-top="238" data-unit="322"></div>
+  <ul class="abs bullets" style="left:979px; top:330px; width:864px; font-size:46px">
+    <li>Interpolate linearly along <i class="m">x</i>, twice</li>
+    <li>Then linearly along <i class="m">y</i></li>
+  </ul>
+  <div class="abs eq" data-scale="4.6"
+       data-tex="f(a,b)=(1-b)\bigl[(1-a)f_{00}+a\,f_{10}\bigr]+b\bigl[(1-a)f_{01}+a\,f_{11}\bigr]"
+       style="left:0; width:1920px; top:850px; text-align:center"></div>
+  <aside class="notes">
+    Separable: the order of the two passes does not matter.
+
+    Demo: drag the point (a, b) inside the cell. Double-click to reset.
+  </aside>
+</section>
+
+<!-- replaces slides 33-34 of the week 2 deck (the convolution view), live -->
+<section>
+  <h1 class="title">Cubic Interpolation</h1>
+  <div class="demo" data-demo="cubic" data-left="40" data-top="250" data-unit="190"></div>
+  <ul class="abs bullets" style="left:880px; top:250px; width:1000px; font-size:46px">
+    <li>Between samples <span class="mr"><i>k</i></span> and <span class="mr"><i>k</i> + 1</span>: a cubic <span class="mr"><i>p</i>(<i>t</i>)</span> with</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2"
+       data-tex="\begin{aligned}p(0)&amp;=f_k &amp; p(1)&amp;=f_{k+1}\\[0.3em] p'(0)&amp;=\tfrac12\bigl(f_{k+1}-f_{k-1}\bigr)\qquad &amp; p'(1)&amp;=\tfrac12\bigl(f_{k+2}-f_{k}\bigr)\end{aligned}"
+       style="left:880px; width:1000px; top:345px; text-align:center"></div>
+  <ul class="abs bullets" style="left:880px; top:540px; width:1000px; font-size:46px">
+    <li>Four conditions for the four coefficients of a cubic</li>
+    <li>Passes through the samples</li>
+    <li>The slope at each sample is set by its two neighbors, so the curve is smooth</li>
+    <li>Uses the four nearest samples</li>
+  </ul>
+  <aside class="notes">
+    No convolution here: a cubic between each two samples, determined by four conditions. It passes through
+    the two samples, and its slope at each one is the central difference of the neighbors (the blue tangent
+    lines). Neighboring cubics share the slopes, so the curve is smooth. This is Catmull–Rom interpolation;
+    it is exactly the cubic used by every demo in this lecture (Keys' cubic convolution with a = −½).
+    The kernel view, and why kernels differ, is a frequency question: week 6.
+
+    The curve can overshoot the samples: the slope at a sample is set before the curve knows where it is going.
+
+    Demo: the cubic between f_k and f_{k+1}, its tangents (solid blue), and the chords f_{k−1} → f_{k+1} and
+    f_k → f_{k+2} (dashed), parallel to the tangents. Drag any of the four samples: moving f_{k−1} tilts the
+    tangent at f_k and bends the piece. Double-click to reset.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 35), live ============================= -->
+<section>
+  <h1 class="title">Bicubic Interpolation</h1>
+  <div class="demo" data-demo="bicubicgrid" data-left="216" data-top="238" data-unit="170"></div>
+  <ul class="abs bullets" style="left:950px; top:302px; width:907px; font-size:46px">
+    <li>Separable, like bilinear:</li>
+    <li class="sub">four 1D cubic interpolations along <i class="m">x</i></li>
+    <li class="sub">then one along <i class="m">y</i></li>
+    <li>Uses a 4×4 neighborhood</li>
+    <li>Smoother than bilinear, and about four times the work</li>
+  </ul>
+  <aside class="notes">
+    Open circles: the four intermediate values along the row direction.
+
+    Demo: drag the point within its cell; the column of intermediate values follows. Double-click to reset.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 37), live: the samplers run on the GPU at screen resolution -->
+<section>
+  <h1 class="title">Comparison</h1>
+  <div class="demo" data-demo="interp" data-method="nearest">
+    <img class="src" src="./assets/eye24-Dx-BXqN_.png" alt="" hidden>
+    <canvas class="gl" data-w="532.8" style="left:100.8px; top:237.6px"></canvas>
+  </div>
+  <div class="demo" data-demo="interp" data-method="bilinear">
+    <img class="src" src="./assets/eye24-Dx-BXqN_.png" alt="" hidden>
+    <canvas class="gl" data-w="532.8" style="left:694.8px; top:237.6px"></canvas>
+  </div>
+  <div class="demo" data-demo="interp" data-method="bicubic">
+    <img class="src" src="./assets/eye24-Dx-BXqN_.png" alt="" hidden>
+    <canvas class="gl" data-w="532.8" style="left:1288.8px; top:237.6px"></canvas>
+  </div>
+  <div class="abs caption" style="left:100.8px; width:532.8px; top:788.4px">nearest neighbor</div>
+  <div class="abs caption" style="left:694.8px; width:532.8px; top:788.4px">bilinear</div>
+  <div class="abs caption" style="left:1288.8px; width:532.8px; top:788.4px">bicubic</div>
+  <div class="abs caption gray" style="left:72px; width:1776px; top:885.6px">A 24×24 crop, magnified 22×</div>
+  <aside class="notes">
+    Bilinear shows faint star-shaped artifacts along diagonals and is visibly softer; bicubic is sharper.
+
+    (Live: each panel resamples the same 24×24 pixels at every screen pixel, with exactly the samplers of
+    vcslides.sample; the cubic is the one on the Cubic Interpolation slide.)
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 39), redrawn ========================== -->
+<section>
+  <h1 class="title">Global vs. Local Warps</h1>
+  <div class="demo" data-demo="globallocal" data-kind="global" data-left="254" data-top="250" data-w="566" data-h="520"></div>
+  <div class="demo" data-demo="globallocal" data-kind="local" data-left="1099" data-top="250" data-w="566" data-h="520"></div>
+  <div class="abs caption" style="left:65px; width:878px; top:806px">Global: a few parameters, the same everywhere</div>
+  <div class="abs caption" style="left:979px; width:878px; top:806px">Local: each region moves differently</div>
+  <aside class="notes">
+    Everything so far was global. Morphing, correcting lens distortion, or registering non-rigid tissue all
+    need local control.
+  </aside>
+</section>
+
+<!-- replaces slide 40 (one grid with arrows): two meshes, live ============ -->
+<section>
+  <h1 class="title">Mesh Warping</h1>
+  <ul class="abs bullets" style="left:180px; top:222px; width:1600px">
+    <li>Two meshes with the same connectivity, one over each image</li>
+    <li>Corresponding vertices are correspondences; inside each cell, interpolate</li>
+  </ul>
+  <div class="demo" data-demo="meshpair" data-left="400" data-left2="1060" data-top="410" data-px="460">
+    <img class="abs src" src="./assets/face256-1WTK5UjV.png" alt="The astronaut's face, the source image" draggable="false">
+    <canvas class="abs gl"></canvas>
+    <div class="abs" data-arrow data-w="120" data-h="61" style="left:900px; top:610px"></div>
+  </div>
+  <div class="abs caption" style="left:400px; width:460px; top:885px">source</div>
+  <div class="abs caption" style="left:1060px; width:460px; top:885px">destination</div>
+  <aside class="notes">
+    A mesh warp is specified by two meshes with the same connectivity, one over each image. Each pair of
+    corresponding vertices is a correspondence (the calendar was a one-cell mesh: four corners). Here the source
+    mesh is regular, and the destination vertices around the nose were pushed outward: the nose is magnified.
+
+    Demo: drag vertices on either mesh; the output follows. Double-click to reset. Moving a destination vertex
+    moves content there; moving a source vertex changes what is fetched.
+  </aside>
+</section>
+
+<!-- replaces slide 41 (Put the Grid in the Output): why the regular mesh goes in the destination -->
+<section>
+  <h1 class="title">Computing a Mesh Warp</h1>
+  <div class="demo" data-demo="cellmap" data-left="70" data-top="270" data-unit="235" data-gap="120"></div>
+  <div class="abs caption" style="left:70px; width:376px; top:660px">source cell</div>
+  <div class="abs caption" style="left:566px; width:376px; top:660px">destination cell</div>
+  <div class="abs eq cell-readout" style="left:566px; width:376px; top:735px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:270px; width:860px; font-size:46px">
+    <li>Warp backward: for each destination pixel, find its cell and its position <span class="mr">(<i>a</i>, <i>b</i>)</span> in that cell</li>
+    <li>Fetch from the same <span class="mr">(<i>a</i>, <i>b</i>)</span> in the source cell: bilinear interpolation of its corners</li>
+    <li>Easiest when the destination mesh is regular: the cell and <span class="mr">(<i>a</i>, <i>b</i>)</span> follow directly from <span class="mr">(<i>x</i>, <i>y</i>)</span></li>
+  </ul>
+  <div class="abs eq" data-scale="5"
+       data-tex="g(\mathbf{x})=f\bigl(\mathbf{x}+\mathbf{d}(\mathbf{x})\bigr)"
+       style="left:1010px; width:860px; top:860px; text-align:center"></div>
+  <aside class="notes">
+    How the previous slide's output is computed: backward warping again. A destination pixel lies in some
+    destination cell, at relative position (a, b); it fetches from the point with the same (a, b) in the
+    corresponding source cell, which is the bilinear interpolation of that cell's four corners.
+
+    So we usually put the regular mesh in the destination: then finding the cell and (a, b) is trivial, and the
+    source vertices just store where each destination vertex fetches from, a displacement d known at the
+    vertices: g(x) = f(x + d(x)). Filling in d between vertices is an interpolation problem (next slide).
+
+    Demo: drag the point in the destination cell; the arrow shows where it fetches from. Double-click to reset.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 42), live as in the prototype deck ======= -->
+<section>
+  <h1 class="title">Bilinear vs. Bicubic Displacement</h1>
+  <div class="demo" data-demo="meshwarp" data-size="670" data-initial="bilinear">
+    <div class="abs mesh-src" style="left:170px; top:205px; width:670px; height:670px"></div>
+    <div class="abs" data-arrow data-w="130" data-h="61" style="left:895px; top:510px"></div>
+    <div class="abs mesh-out" style="left:1080px; top:205px; width:670px; height:670px">
+      <canvas class="gl" style="left:0; top:0"></canvas>
+    </div>
+  </div>
+  <div class="abs caption" style="left:170px; top:905px; width:670px">source</div>
+  <div class="abs caption" style="left:1080px; top:905px; width:670px">destination</div>
+  <div class="abs choices" style="left:0; top:975px; width:1920px; justify-content:center" data-prevent-swipe>
+    <button data-value="bilinear">bilinear</button>
+    <button data-value="bicubic">bicubic</button>
+  </div>
+  <aside class="notes">
+    The regular mesh is in the destination (right); the handles on the left are where each destination vertex
+    fetches from. The red curves on the left are the sample positions x + d(x) along the destination grid lines.
+    Same vertex displacements, two ways to interpolate d between vertices: bilinear d has discontinuous
+    derivatives across cell boundaries, so the checkerboard creases along the grid lines. Bicubic d is smooth.
+    One idea used twice: interpolating intensities, and interpolating coordinates.
+
+    Demo: drag a handle; double-click the source to reset; the buttons switch the interpolation.
+  </aside>
+</section>
+
+<!-- replaces slide 45, moved before morphing (which needs it) ========== -->
+<section>
+  <h1 class="title">When the Destination Mesh Is Not Regular</h1>
+  <ul class="abs bullets" style="left:150px; top:222px; width:1650px; font-size:46px">
+    <li>Which cell contains the pixel? What is its <span class="mr">(<i>a</i>, <i>b</i>)</span>? Both hard for a general quad</li>
+    <li>Triangles make both easy:</li>
+    <li class="sub">the pixel's weights <span class="mr"><i>α</i>, <i>β</i>, <i>γ</i></span> in its destination triangle</li>
+    <li class="sub">fetch from the same weights in the source triangle</li>
+  </ul>
+  <div class="demo" data-demo="tripair" data-left="360" data-top="590" data-unit="200" data-gap="170"></div>
+  <div class="abs caption" style="left:360px; width:360px; top:935px">source triangle</div>
+  <div class="abs caption" style="left:890px; width:360px; top:935px">destination triangle</div>
+  <div class="abs eq tri-readout" style="left:1290px; width:600px; top:760px; text-align:center"></div>
+  <aside class="notes">
+    In morphing (next), the destination mesh is regular in neither image. Then finding a pixel's cell, and
+    inverting a general quad cell's map, are both hard. Split each cell into two triangles: three vertices,
+    three correspondences, exactly one affine map. The pixel's weights in its destination triangle are the
+    affine combination from "Operations on Points"; the same weights applied to the source triangle's vertices
+    give the point to fetch from. (For you: barycentric coordinates; they return in week 7.)
+    Exercise 1: triangle-mesh warping, and morphing.
+
+    Demo: drag the point in the destination triangle; the weights and the source point follow.
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 43), with the meshes ===================== -->
+<section>
+  <h1 class="title">Image Morphing</h1>
+  <img class="abs" src="./assets/crossdissolve-Cv6F_l93.jpg" alt="A cross-dissolve between the two portraits of the next slide, with ghosting"
+       style="left:325px; top:228px; height:248px">
+  <div class="abs caption gray" style="left:72px; width:1776px; top:490px">Cross-dissolve alone: ghosting</div>
+  <div class="abs eq" data-scale="5" data-tex="I_t=(1-t)\,I_A+t\,I_B" style="left:0; width:1920px; top:575px; text-align:center"></div>
+  <ul class="abs bullets" style="left:300px; top:700px; width:1400px; font-size:46px">
+    <li>Meshes <span class="mr"><i>M<sub>A</sub></i></span> and <span class="mr"><i>M<sub>B</sub></i></span> on the two images, with corresponding vertices</li>
+    <li>The mesh at time <i class="m">t</i>, vertex by vertex: <span class="mr"><i>M<sub>t</sub></i> = (1 − <i>t</i>) <i>M<sub>A</sub></i> + <i>t M<sub>B</sub></i></span></li>
+    <li>Warp both images to <span class="mr"><i>M<sub>t</sub></i></span>, then cross-dissolve them</li>
+  </ul>
+  <aside class="notes">
+    Warping aligns features, cross-dissolving blends color and texture.
+    The strip: the two portraits of the next slide, cross-dissolved at t = 0, ¼, ½, ¾, 1 without warping
+    (their eyes are aligned, but the hair, face outline, ears and collar ghost).
+    The intermediate mesh is an affine combination of corresponding vertices; it is regular in neither image, so
+    the warps use triangles (previous slide).
+  </aside>
+</section>
+
+<!-- from the week 2 deck (slide 44) ===================================== -->
+<section>
+  <h1 class="title">Morphing with Meshes</h1>
+  <div class="demo" data-demo="morph" data-top="255" data-px="340" data-xs="50,420,790,1160,1530">
+    <img class="abs src" src="./assets/morph_a-BzXld9P5.jpg" alt="Image A: a portrait (NASA)" draggable="false">
+    <img class="abs src" src="./assets/morph_b-D16dEjJL.jpg" alt="Image B: a portrait (NASA)" draggable="false">
+    <canvas class="abs gl"></canvas>
+    <canvas class="abs gl"></canvas>
+    <canvas class="abs gl"></canvas>
+  </div>
+  <div class="abs caption" style="left:30px; width:380px; top:609px; font-size:40px">image A, mesh <i class="m">M<sub>A</sub></i></div>
+  <div class="abs caption" style="left:400px; width:380px; top:609px; font-size:40px">A warped to <i class="m">M<sub>t</sub></i></div>
+  <div class="abs caption" style="left:770px; width:380px; top:609px; font-size:40px">the morph</div>
+  <div class="abs caption" style="left:1140px; width:380px; top:609px; font-size:40px">B warped to <i class="m">M<sub>t</sub></i></div>
+  <div class="abs caption" style="left:1510px; width:380px; top:609px; font-size:40px">image B, mesh <i class="m">M<sub>B</sub></i></div>
+  <div class="abs demo" style="left:610px; top:735px; width:700px" data-prevent-swipe>
+    <div class="slider-row"><span class="lab lab-t" style="width:170px"></span>
+      <input type="range" name="t" min="0" max="1" step="0.1" value="0.5"></div>
+  </div>
+  <div class="abs eq" data-scale="4.4" data-tex="M_t=(1-t)\,M_A+t\,M_B\qquad I_t=(1-t)\,\tilde I_A+t\,\tilde I_B"
+       style="left:0; width:1920px; top:845px; text-align:center"></div>
+  <aside class="notes">
+    Live, replacing the static figure after Wolberg. Image A with its mesh M_A, image B with M_B (corresponding
+    vertices). For a time t: the intermediate mesh M_t, vertex by vertex; A warped from M_A to M_t; B warped from
+    M_B to M_t (the tildes); and the morph, their cross-dissolve. At t = 0 the morph is A, at t = 1 it is B.
+    The warps are drawn with the "same (a, b) in corresponding cells" rule; triangles would serve as well.
+
+    Demo: move t with the slider (steps of 0.1). Drag interior vertices of either mesh to align features (head
+    outline, chin, mouth, ears) and watch the ghosting disappear; with both meshes regular the morph is a plain
+    cross-dissolve. The default meshes sit on corresponding features (hair, eyes, mouth, chin), as in Wolberg's
+    figure. Double-click a mesh to reset both.
+
+    Photos: NASA official portraits of 1987 astronaut candidates Kevin P. Chilton and Mae C. Jemison, public
+    domain (Wikimedia Commons), aligned by the eyes and cropped.
+  </aside>
+</section>
+
+</div>
+</div>
+</body>
+</html>

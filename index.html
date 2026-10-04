@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2D Transformations and Image Warping</title>
+  <link rel="icon" href="data:,">
+  <script type="module" crossorigin src="./assets/prototype-wUb16Gbf.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/meshwarp-BSD_dXp_.js">
+  <link rel="stylesheet" crossorigin href="./assets/meshwarp-ByxN4Krh.css">
+</head>
+<body>
+<!-- Positions are slide pixels on the 1920 x 1080 canvas (= inches in weeks/w02/spec.py x 72). -->
+<div class="reveal">
+<div class="slides">
+
+<!-- 1 ------------------------------------------------------------------ title -->
+<section>
+  <div class="abs section-title">2D Transformations<br>and Image Warping</div>
+  <div class="abs section-sub">Visual Computing · Week 2</div>
+  <aside class="notes">
+    Hour 1: transformations as matrices. Hour 2: from transformations to image warps.
+    (Prototype: slides 2–5 are live demos; slide 6 is an ordinary slide, for comparison with Keynote.)
+  </aside>
+</section>
+
+<!-- 2 ------------------------------------------------------------------ rotation -->
+<section>
+  <h1 class="title">Rotation and Scaling</h1>
+  <div class="abs demo" data-demo="rotation" data-size="820" style="left:130px; top:215px"></div>
+  <div class="abs eq" data-scale="5"
+       data-tex="M=\begin{bmatrix}s\cos\theta&amp;-s\sin\theta&amp;0\\s\sin\theta&amp;s\cos\theta&amp;0\\0&amp;0&amp;1\end{bmatrix}"
+       style="left:1030px; top:255px"></div>
+  <div class="abs eq matrix" style="left:1112px; top:500px"></div>
+  <div class="abs demo" style="left:1030px; top:790px; width:800px" data-prevent-swipe>
+    <div class="slider-row"><span class="lab lab-angle"></span>
+      <input type="range" name="angle" min="-180" max="180" step="1" value="30"></div>
+    <div class="slider-row" style="margin-top:40px"><span class="lab lab-scale"></span>
+      <input type="range" name="scale" min="0.5" max="1.4" step="0.05" value="1"></div>
+  </div>
+  <aside class="notes">
+    Rotation about the origin, counter-clockwise for θ &gt; 0; the dashed outline is the original house.
+    Drag θ through 90° and 180° and read the matrix: the columns are the images of the x and y axes.
+    Uniform scale s multiplies the upper-left 2×2 block and commutes with the rotation.
+    The last row stays [0 0 1]: this is an affine map.
+  </aside>
+</section>
+
+<!-- 3 ------------------------------------------------------------------ homography -->
+<section>
+  <h1 class="title">Removing Perspective Distortion</h1>
+  <div class="demo" data-demo="homography">
+    <img class="plate" src="r_calendar_persp.png" alt="A calendar photographed at an angle"
+         data-w="900" style="left:70px; top:250px" draggable="false">
+    <div class="abs" data-arrow data-w="120" data-h="61" style="left:1000px; top:478px"></div>
+    <canvas class="gl" data-w="700" style="left:1150px; top:250px"></canvas>
+  </div>
+  <div class="abs caption" style="left:72px; top:878px; width:1776px; font-size:48px">
+    Four point correspondences determine <i class="m">H</i></div>
+  <aside class="notes">
+    Drag a corner: H is re-solved from the four correspondences (DLT), and the right image is
+    backward-warped with H⁻¹, every pixel, every frame. Double-click the photo to reset the corners.
+    Try a wrong corner to show that H maps any quadrilateral to the rectangle.
+    Solving for H is in hour 2; this is part of exercise 1. Photo from the IP recitations.
+  </aside>
+</section>
+
+<!-- 4 ------------------------------------------------------------------ interpolation -->
+<section>
+  <h1 class="title">Interpolation X</h1>
+  <div class="demo" data-demo="interp" data-src="eye24.png" data-initial="bicubic">
+    <canvas class="gl" data-w="720" style="left:260px; top:215px"></canvas>
+  </div>
+  <div class="abs choices vertical" style="left:1180px; top:400px" data-prevent-swipe>
+    <button data-value="nearest">nearest neighbor</button>
+    <button data-value="bilinear">bilinear</button>
+    <button data-value="bicubic">bicubic</button>
+  </div>
+  <div class="abs caption gray" style="left:260px; top:960px; width:720px">
+    A 24×24 crop, magnified 30×</div>
+  <aside class="notes">
+    The same 24×24 pixels (the astronaut's eye), resampled at every screen pixel.
+    Nearest neighbor: blocks. Bilinear: faint star-shaped artifacts along diagonals, visibly softer.
+    Bicubic (Keys, a = −½): sharper, with slight overshoot at edges.
+  </aside>
+</section>
+
+<!-- 5 ------------------------------------------------------------------ mesh warping -->
+<section>
+  <h1 class="title">Bilinear vs. Bicubic Displacement</h1>
+  <div class="demo" data-demo="meshwarp" data-size="670" data-initial="bilinear">
+    <div class="abs mesh-src" style="left:170px; top:205px; width:670px; height:670px"></div>
+    <div class="abs" data-arrow data-w="130" data-h="61" style="left:895px; top:510px"></div>
+    <div class="abs mesh-out" style="left:1080px; top:205px; width:670px; height:670px">
+      <canvas class="gl" style="left:0; top:0"></canvas>
+    </div>
+  </div>
+  <div class="abs caption" style="left:170px; top:905px; width:670px">source</div>
+  <div class="abs caption" style="left:1080px; top:905px; width:670px">output</div>
+  <div class="abs choices" style="left:0; top:975px; width:1920px; justify-content:center" data-prevent-swipe>
+    <button data-value="bilinear">bilinear</button>
+    <button data-value="bicubic">bicubic</button>
+  </div>
+  <aside class="notes">
+    The grid is in the output (right): each vertex stores where it fetches from in the source,
+    and the handles on the left are those positions. Drag a handle; double-click the source to reset.
+    The red curves on the left are the sample positions x + d(x) along the output grid lines.
+    Same vertex displacements, two ways to interpolate d between vertices: bilinear d has
+    discontinuous derivatives across cell boundaries, so the checkerboard creases along the grid lines.
+    Bicubic d is smooth.
+  </aside>
+</section>
+
+<!-- 6 ------------------------------------------------------------------ static slide -->
+<section>
+  <h1 class="title">Solving for an Affine Transformation</h1>
+  <div class="abs eq" data-scale="5.2" data-tex="x'=ax+by+m\qquad y'=cx+dy+n"
+       style="left:0; width:1920px; top:237.6px; text-align:center"></div>
+  <ul class="abs bullets" style="left:216px; top:360px; width:1584px">
+    <li>Each correspondence contributes two rows of a linear system:</li>
+  </ul>
+  <div class="abs eq" data-scale="5"
+       data-tex="\begin{bmatrix}x&amp;y&amp;1&amp;0&amp;0&amp;0\\0&amp;0&amp;0&amp;x&amp;y&amp;1\end{bmatrix}\begin{bmatrix}a\\b\\m\\c\\d\\n\end{bmatrix}=\begin{bmatrix}x'\\y'\end{bmatrix}"
+       style="left:0; width:1920px; top:453.6px; text-align:center"></div>
+  <ul class="abs bullets" style="left:172.8px; top:799.2px; width:950.4px; font-size:44px">
+    <li>3 correspondences: a 6×6 system, solved exactly</li>
+    <li>More than 3: least squares</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\min_{\mathbf{t}}\;\|A\mathbf{t}-\mathbf{b}\|^2"
+       style="left:1252.8px; top:820.8px"></div>
+  <aside class="notes">
+    Stack the two rows per correspondence into A; the unknowns form the vector t.
+  </aside>
+</section>
+
+</div>
+</div>
+</body>
+</html>
