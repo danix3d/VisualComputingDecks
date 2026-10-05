@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Geometric Transformations</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/transformations-DNL6lmq2.js"></script>
+  <script type="module" crossorigin src="./assets/transformations-Cixgj6FT.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/transformations-DST-scrg.css">
 </head>
 <body>
@@ -1155,8 +1155,8 @@
 <!-- from the week 2 deck (slide 43), with the meshes ===================== -->
 <section>
   <h1 class="title">Image Morphing</h1>
-  <img class="abs" src="./assets/crossdissolve-ddtQ8sAU.jpg" alt="A cross-dissolve between the two portraits of the next slide, with ghosting"
-       style="left:325px; top:228px; height:248px">
+  <img class="abs" src="./assets/crossdissolve-Dw6ojsGM.jpg" alt="A cross-dissolve between the two portraits of the next slide, with ghosting"
+       style="left:482px; top:228px; height:248px">
   <div class="abs caption gray" style="left:72px; width:1776px; top:490px">Cross-dissolve alone: ghosting</div>
   <div class="abs eq" data-scale="5" data-tex="I_t=(1-t)\,I_A+t\,I_B" style="left:0; width:1920px; top:575px; text-align:center"></div>
   <ul class="abs bullets" style="left:300px; top:700px; width:1400px; font-size:46px">
@@ -1176,24 +1176,24 @@
 <!-- from the week 2 deck (slide 44) ===================================== -->
 <section>
   <h1 class="title">Morphing with Meshes</h1>
-  <div class="demo" data-demo="morph" data-top="255" data-px="340" data-xs="50,420,790,1160,1530">
-    <img class="abs src" src="./assets/morph_a-BkyS_x_L.jpg" alt="Image A: a portrait of an older man" draggable="false">
-    <img class="abs src" src="./assets/morph_b-aKVgdm4R.jpg" alt="Image B: a portrait of a young woman" draggable="false">
+  <div class="demo" data-demo="morph" data-top="225" data-px="320" data-xs="100,450,800,1150,1500">
+    <img class="abs src" src="./assets/morph_a-Bc6-VftN.jpg" alt="Image A: a portrait of an older man" draggable="false">
+    <img class="abs src" src="./assets/morph_b-ghxOHksK.jpg" alt="Image B: a portrait of a young woman" draggable="false">
     <canvas class="abs gl"></canvas>
     <canvas class="abs gl"></canvas>
     <canvas class="abs gl"></canvas>
   </div>
-  <div class="abs caption" style="left:30px; width:380px; top:609px; font-size:40px">image A, mesh <i class="m">M<sub>A</sub></i></div>
-  <div class="abs caption" style="left:400px; width:380px; top:609px; font-size:40px">A warped to <i class="m">M<sub>t</sub></i></div>
-  <div class="abs caption" style="left:770px; width:380px; top:609px; font-size:40px">the morph</div>
-  <div class="abs caption" style="left:1140px; width:380px; top:609px; font-size:40px">B warped to <i class="m">M<sub>t</sub></i></div>
-  <div class="abs caption" style="left:1510px; width:380px; top:609px; font-size:40px">image B, mesh <i class="m">M<sub>B</sub></i></div>
-  <div class="abs demo" style="left:610px; top:735px; width:700px" data-prevent-swipe>
+  <div class="abs caption" style="left:80px; width:360px; top:668px; font-size:40px">image A, mesh <i class="m">M<sub>A</sub></i></div>
+  <div class="abs caption" style="left:430px; width:360px; top:668px; font-size:40px">A warped to <i class="m">M<sub>t</sub></i></div>
+  <div class="abs caption" style="left:780px; width:360px; top:668px; font-size:40px">the morph</div>
+  <div class="abs caption" style="left:1130px; width:360px; top:668px; font-size:40px">B warped to <i class="m">M<sub>t</sub></i></div>
+  <div class="abs caption" style="left:1480px; width:360px; top:668px; font-size:40px">image B, mesh <i class="m">M<sub>B</sub></i></div>
+  <div class="abs demo" style="left:610px; top:770px; width:700px" data-prevent-swipe>
     <div class="slider-row"><span class="lab lab-t" style="width:170px"></span>
       <input type="range" name="t" min="0" max="1" step="0.1" value="0.5"></div>
   </div>
   <div class="abs eq" data-scale="4.4" data-tex="M_t=(1-t)\,M_A+t\,M_B\qquad I_t=(1-t)\,\tilde I_A+t\,\tilde I_B"
-       style="left:0; width:1920px; top:845px; text-align:center"></div>
+       style="left:0; width:1920px; top:870px; text-align:center"></div>
   <aside class="notes">
     Live, replacing the static figure after Wolberg. Image A with its mesh M_A, image B with M_B (corresponding
     vertices). For a time t: the intermediate mesh M_t, vertex by vertex; A warped from M_A to M_t; B warped from
@@ -1205,7 +1205,7 @@
     cross-dissolve. The default meshes sit on corresponding features (hairline, eyes, mouth, chin), as in Wolberg's
     figure. Double-click a mesh to reset both.
 
-    Photos: two generated portraits (no real people), aligned by the eyes and cropped.
+    Photos: two generated portraits (no real people), used as they are (no cropping or alignment).
   </aside>
 </section>
 
