@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Geometric Transformations</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/transformations-DZNkNShT.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/transformations-CwLuS780.css">
+  <script type="module" crossorigin src="./assets/transformations-naWvRfzq.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/transformations-DST-scrg.css">
 </head>
 <body>
 <!-- Converted from "W2-1 2D Transformations.key". Positions are slide pixels on the 1920 x 1080 canvas
@@ -856,10 +856,10 @@
 <section>
   <h1 class="title">Removing Perspective Distortion</h1>
   <div class="demo" data-demo="homography">
-    <img class="plate" src="./assets/r_calendar_persp-BTBsif0q.png" alt="A calendar photographed at an angle"
-         data-w="900" style="left:70px; top:250px" draggable="false">
-    <div class="abs" data-arrow data-w="120" data-h="61" style="left:1000px; top:478px"></div>
-    <canvas class="gl" data-w="700" style="left:1150px; top:250px"></canvas>
+    <img class="plate" src="./assets/mondrian_persp-D8NEBNTH.jpg" alt="A square painting, photographed from below at an angle"
+         data-w="640" style="left:263px; top:240px" draggable="false">
+    <div class="abs" data-arrow data-w="120" data-h="61" style="left:953px; top:476px"></div>
+    <canvas class="gl" data-w="533" style="left:1123px; top:240px"></canvas>
   </div>
   <div class="abs caption" style="left:72px; top:878px; width:1776px; font-size:48px">
     Four point correspondences determine <i class="m">H</i></div>
@@ -868,19 +868,21 @@
 
     Demo: drag a corner: H is re-solved from the four correspondences (DLT), and the right image is
     backward-warped with H⁻¹, every pixel, every frame. Double-click the photo to reset the corners.
-    Try a wrong corner to show that H maps any quadrilateral to the rectangle. Photo from the IP recitations.
+    Try a wrong corner to show that H maps any quadrilateral to the rectangle. The painting is square, so a correct
+    H gives straight, axis-aligned black lines and a square red block. (Generated image, after Mondrian's
+    Composition with Red, Blue and Yellow, 1930.)
   </aside>
 </section>
 
-<!-- from the week 2 deck (slide 29), with the calendar ===================== -->
+<!-- from the week 2 deck (slide 29), with the painting ===================== -->
 <section>
   <h1 class="title">Forward Warping</h1>
-  <img class="abs" src="./assets/r_calendar_persp-BTBsif0q.png" alt="The calendar photographed at an angle (the source)"
-       style="left:108px; top:230px; height:347px">
-  <div class="demo" data-demo="mapdiagram" data-left="771" data-top="298" data-cell="30" data-gap="90"></div>
-  <div class="abs caption" style="left:731px; width:290px; top:518px; font-size:36px">source</div>
-  <div class="abs caption" style="left:1031px; width:290px; top:518px; font-size:36px">destination</div>
-  <img class="abs warp-img" src="./assets/warp_forward-B88J6Zuw.png" alt="The calendar rectified by forward warping, with black holes, densest at the top" style="left:1341px; top:230px; height:347px">
+  <img class="abs" src="./assets/mondrian_persp-D8NEBNTH.jpg" alt="The painting photographed at an angle (the source)"
+       style="left:215px; top:225px; height:400px">
+  <div class="demo" data-demo="mapdiagram" data-left="745" data-top="300" data-cell="30" data-gap="90"></div>
+  <div class="abs caption" style="left:705px; width:290px; top:520px; font-size:36px">source</div>
+  <div class="abs caption" style="left:1005px; width:290px; top:520px; font-size:36px">destination</div>
+  <img class="abs warp-img" src="./assets/warp_forward-DnLKvq7r.png" alt="The painting rectified by forward warping, with black holes, densest at the top" style="left:1305px; top:225px; height:400px">
   <div class="abs warp-text">
     <pre class="code">for each source pixel (u, v):
     (x, y) = T(u, v)
@@ -890,22 +892,22 @@
     </ul>
   </div>
   <aside class="notes">
-    Forward warping of the calendar photo with the rectifying homography from the previous slides: most
-    destination pixels near the top are never written, because the far part of the calendar is stretched.
-    Near the bottom, where the calendar is compressed, pixels are written twice instead. (The holes are black.)
+    Forward warping of the painting photo with the rectifying homography from the previous slides: most
+    destination pixels near the top are never written, because the far part of the painting is stretched.
+    Near the bottom, where the painting is compressed, pixels are written twice instead. (The holes are black.)
     Splatting (spreading each source pixel over its neighbors) patches this but blurs.
   </aside>
 </section>
 
-<!-- from the week 2 deck (slide 30), with the calendar ===================== -->
+<!-- from the week 2 deck (slide 30), with the painting ===================== -->
 <section>
   <h1 class="title">Backward Warping</h1>
-  <img class="abs" src="./assets/r_calendar_persp-BTBsif0q.png" alt="The calendar photographed at an angle (the source)"
-       style="left:108px; top:230px; height:347px">
-  <div class="demo" data-demo="mapdiagram" data-backward data-left="771" data-top="298" data-cell="30" data-gap="90"></div>
-  <div class="abs caption" style="left:731px; width:290px; top:518px; font-size:36px">source</div>
-  <div class="abs caption" style="left:1031px; width:290px; top:518px; font-size:36px">destination</div>
-  <img class="abs warp-img" src="./assets/warp_backward-Bv7DYMb3.png" alt="The calendar rectified by backward warping, with no holes" style="left:1341px; top:230px; height:347px">
+  <img class="abs" src="./assets/mondrian_persp-D8NEBNTH.jpg" alt="The painting photographed at an angle (the source)"
+       style="left:215px; top:225px; height:400px">
+  <div class="demo" data-demo="mapdiagram" data-backward data-left="745" data-top="300" data-cell="30" data-gap="90"></div>
+  <div class="abs caption" style="left:705px; width:290px; top:520px; font-size:36px">source</div>
+  <div class="abs caption" style="left:1005px; width:290px; top:520px; font-size:36px">destination</div>
+  <img class="abs warp-img" src="./assets/warp_backward-Dzx9v3Rd.png" alt="The painting rectified by backward warping, with no holes" style="left:1305px; top:225px; height:400px">
   <div class="abs warp-text">
     <pre class="code">for each destination pixel (x, y):
     (u, v) = T⁻¹(x, y)
@@ -917,7 +919,7 @@
   </div>
   <aside class="notes">
     Requires T to be invertible; for a global transformation that is just the inverse matrix. The same
-    calendar and homography as on the previous slide, now with no holes (bilinear sampling).
+    painting and homography as on the previous slide, now with no holes (bilinear sampling).
     The open question, what src(u, v) means at a non-integer position, occupies the next part.
   </aside>
 </section>
@@ -1062,7 +1064,7 @@
   <div class="abs caption" style="left:1060px; width:460px; top:885px">destination</div>
   <aside class="notes">
     A mesh warp is specified by two meshes with the same connectivity, one over each image. Each pair of
-    corresponding vertices is a correspondence (the calendar was a one-cell mesh: four corners). Here the source
+    corresponding vertices is a correspondence (the painting was a one-cell mesh: four corners). Here the source
     mesh is regular, and the destination vertices around the nose were pushed outward: the nose is magnified.
 
     Demo: drag vertices on either mesh; the output follows. Double-click to reset. Moving a destination vertex
