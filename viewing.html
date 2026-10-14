@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Transformations and Viewing</title>
+  <link rel="icon" href="data:,">
+  <script type="module" crossorigin src="./assets/viewing-BrPC7JII.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/view3d-DkND2-b0.js">
+  <link rel="stylesheet" crossorigin href="./assets/view3d-DST-scrg.css">
+</head>
+<body>
+<!-- Week 3. Converted from "03 Transformations.key" (slides 33-49) and "04 Viewing.key"; figures redrawn
+     (tools/make_w3_figures.py). Positions are slide pixels on the 1920 x 1080 canvas. -->
+<div class="reveal">
+<div class="slides">
+
+<!-- T33 -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Transformations in 3D</div>
+</section>
+
+<!-- T34 -->
+<section>
+  <h1 class="title">3D Coordinate Systems</h1>
+  <ul class="abs bullets" style="left:330px; top:330px; width:850px">
+    <li>Right-handed coordinate system:</li>
+  </ul>
+  <ul class="abs bullets" style="left:330px; top:670px; width:850px">
+    <li>Left-handed coordinate system:</li>
+  </ul>
+  <img class="abs" src="./assets/axes_rh-tQvO8aXT.svg" alt="Right-handed axes" style="left:1160px; top:210px; width:330px; height:300px">
+  <img class="abs" src="./assets/axes_lh-CYT_2A6O.svg" alt="Left-handed axes" style="left:1160px; top:550px; width:330px; height:300px">
+  <aside class="notes">
+By convention, positive rotations in a right-handed coordinate system are such that, when looking from a positive axis towards the origin, a 90 degree counterclockwise rotation will transform one positive axis into the next.
+Thus, if we’re looking from the positive x direction: y goes to z;
+If from y: z goes to x; 
+If from  z: x goes to y;
+In the left-handed coordinate system the direction is reversed.
+
+Another common rule is the “thumb rule”: imagine that your thumb is the positive z-axis. Your fingers curl from the positive x-axis towards the positive y-axis.
+
+Right-handed coordinate system is used to define transformations, since this is the standard mathematical convention. However, beware that not all graphics texts use a right-handed system. In particular, camera centered coordinate systems are often left-handed, because it is convenient to think of the z (depth) axis as pointing away from the viewer, such that more distant objects have greater depth (z) values.
+  </aside>
+</section>
+
+<!-- T35 -->
+<section>
+  <h1 class="title">3D Transformations</h1>
+  <ul class="abs bullets" style="left:200px; top:300px; width:1080px">
+    <li>A point is represented by a 3D column vector:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}x\\y\\z\end{bmatrix}" style="left:1250px; top:225px"></div>
+  <ul class="abs bullets" style="left:200px; top:540px; width:1080px">
+    <li>Homogeneous coordinates:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}x\\y\\z\\1\end{bmatrix}" style="left:1250px; top:445px"></div>
+  <ul class="abs bullets" style="left:200px; top:820px; width:1080px">
+    <li>Affine transformations are 4 by 4 matrices:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}a&amp;b&amp;c&amp;t_x\\d&amp;e&amp;f&amp;t_y\\g&amp;h&amp;i&amp;t_z\\0&amp;0&amp;0&amp;1\end{bmatrix}" style="left:1250px; top:715px"></div>
+</section>
+
+<!-- T36 -->
+<section>
+  <h1 class="title">3D Transformations</h1>
+  <ul class="abs bullets" style="left:300px; top:380px; width:500px">
+    <li>Translation:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;a\\0&amp;1&amp;0&amp;b\\0&amp;0&amp;1&amp;c\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x+a\\y+b\\z+c\\1\end{bmatrix}" style="left:760px; top:270px"></div>
+  <ul class="abs bullets" style="left:300px; top:790px; width:500px">
+    <li>Scaling:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}a&amp;0&amp;0&amp;0\\0&amp;b&amp;0&amp;0\\0&amp;0&amp;c&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}ax\\by\\cz\\1\end{bmatrix}" style="left:760px; top:680px"></div>
+  <aside class="notes">
+Here, as in the 2D case, if the lower right element of the matrix is different from 1, the result is overall scaling.
+  </aside>
+</section>
+
+<!-- T37 -->
+<section>
+  <h1 class="title">3D Reflection</h1>
+  <ul class="abs bullets" style="left:300px; top:380px; width:700px">
+    <li>Through the <span class="mr"><i>xy</i></span> plane:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;-1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}" style="left:1000px; top:270px"></div>
+  <ul class="abs bullets" style="left:300px; top:700px; width:1400px">
+    <li>Reflections through the <span class="mr"><i>xz</i></span> and the <span class="mr"><i>yz</i></span> planes are defined similarly</li>
+    <li>How can we reflect through some arbitrary plane?</li>
+  </ul>
+  <aside class="notes">
+Suppose we know a point P on the plane.
+1) Translate P to the origin;
+2) Rotate the normal vector until it coincides with the +z axis
+3) Reflect through the xy plane
+4) Apply the inverse rotations to the ones in stage 2
+5) Translate the origin back to P.
+  </aside>
+</section>
+
+<!-- T38 -->
+<section>
+  <h1 class="title">3D Shearing</h1>
+  <ul class="abs bullets" style="left:300px; top:360px; width:400px">
+    <li>Shearing:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;a&amp;b&amp;0\\c&amp;1&amp;d&amp;0\\e&amp;f&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x+ay+bz\\cx+y+dz\\ex+fy+z\\1\end{bmatrix}" style="left:640px; top:250px"></div>
+  <ul class="abs bullets" style="left:300px; top:690px; width:1400px">
+    <li>The change in each coordinate is a linear combination of all three</li>
+    <li>Transforms a cube into a general parallelepiped</li>
+  </ul>
+  <aside class="notes">
+Think of the unit cube. Each face of the cube (a square) is distorted into a parallelogram, and the cube turns into a general parallelepiped, also anchored at the origin.
+  </aside>
+</section>
+
+<!-- T39 -->
+<section>
+  <h1 class="title">3D Rotation</h1>
+  <ul class="abs bullets" style="left:300px; top:250px; width:900px">
+    <li>Rotation about the <span class="mr"><i>x</i></span>-axis:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;\cos\theta&amp;-\sin\theta&amp;0\\0&amp;\sin\theta&amp;\cos\theta&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\cos\theta-z\sin\theta\\y\sin\theta+z\cos\theta\\1\end{bmatrix}" style="left:0; width:1920px; top:350px; text-align:center"></div>
+  <ul class="abs bullets" style="left:300px; top:720px; width:1400px">
+    <li>Rotations about each of the other two axes are defined similarly.</li>
+    <li>Rotations are orthogonal matrices, preserving distances and angles.</li>
+  </ul>
+  <aside class="notes">
+For rotation about the x-axis, the x coordinates of the object must remain unchanged. The rotation occurs in a plane perpendicular to the axis.
+Note that when rotating about y, we must reverse the signs on the sines, in order to be consistent with the usage of a right handed coordinate system.
+  </aside>
+</section>
+
+<!-- T40 -->
+<section>
+  <h1 class="title">Rotation About an Arbitrary Axis</h1>
+  <ul class="abs bullets" style="left:300px; top:250px; width:1400px">
+    <li>The idea: make the arbitrary axis coincident with one of the coordinate axes, rotate, and then transform back:</li>
+    <li class="sub">Translate rotation axis to pass through the origin;</li>
+    <li class="sub">Rotate about the X axis into the XZ plane;</li>
+    <li class="sub">Rotate about the Y axis into the YZ plane - rotation axis is now aligned with the Z axis;</li>
+    <li class="sub">Rotate about the Z axis by the desired angle;</li>
+    <li class="sub">Apply inverse rotations about the Y and X axes;</li>
+    <li class="sub">Apply inverse translation.</li>
+  </ul>
+</section>
+
+<!-- T41 -->
+<section>
+  <h1 class="title">Rotation About an Arbitrary Axis</h1>
+  <div class="abs caption" style="left:72px; width:1776px; top:480px; font-size:48px">Video: <a href="https://www.youtube.com/watch?v=75o5pmeXUMo" target="_blank" rel="noopener">3D rotation about an arbitrary axis</a> (YouTube)</div>
+  <aside class="notes">
+(The original slide embedded this video; it is linked here instead. A live, stepped demo may replace it.)
+  </aside>
+</section>
+
+<!-- new: Rodrigues -->
+<section>
+  <h1 class="title">Rodrigues’ Rotation Formula</h1>
+  <div class="demo" data-demo="rodrigues" data-left="20" data-top="190" data-w="1000" data-h="720"
+       data-ox="400" data-oy="600" data-unit="250" data-az="-55" data-el="16"></div>
+  <div class="abs demo" style="left:140px; top:940px; width:760px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-theta" style="width:190px"></span><input type="range" name="theta" min="0" max="360" step="1"></div>
+  </div>
+  <ul class="abs bullets" style="left:1060px; top:230px; width:830px">
+    <li>Rotation by <span class="mr"><i>θ</i></span> about the unit axis <span class="mr"><i>k</i></span>: split <span class="mr"><i>v</i></span> along the axis</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="v_\parallel=(k\cdot v)\,k,\qquad v_\perp=v-v_\parallel" style="left:1060px; width:830px; top:380px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1060px; top:470px; width:830px">
+    <li><span class="mr"><i>v</i><sub>∥</sub></span> stays; <span class="mr"><i>v</i><sub>⊥</sub></span> turns by <span class="mr"><i>θ</i></span> toward <span class="mr"><i>k</i> × <i>v</i></span>:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="Rv=v_\parallel+\cos\theta\,v_\perp+\sin\theta\,(k\times v)" style="left:1060px; width:830px; top:555px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1060px; top:660px; width:830px">
+    <li>As a matrix:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="R=\cos\theta\,I+\sin\theta\,[k]_\times+(1-\cos\theta)\,kk^{\mathsf T}" style="left:1060px; width:830px; top:740px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.6" data-tex="[k]_\times=\begin{bmatrix}0&amp;-k_z&amp;k_y\\k_z&amp;0&amp;-k_x\\-k_y&amp;k_x&amp;0\end{bmatrix}" style="left:1060px; width:830px; top:840px; text-align:center"></div>
+  <aside class="notes">
+New. The closed form of the five-step composition on the previous slides: rotation by θ about a unit axis k through the origin (for an axis through another point, translate it to the origin first, as before). Stated, not derived; the picture is the derivation. The component of v along the axis, v∥ = (k·v)k, does not move. The rest, v⊥, lies in the plane perpendicular to k and turns in that plane by θ, toward k × v, which is v⊥ turned by 90° (same length). So Rv = v∥ + cos θ v⊥ + sin θ (k × v). Writing k × v as the matrix [k]× applied to v, and v∥ as kkᵀv, gives the matrix form.
+
+Demo: move the θ slider; the tip of v travels on the dashed circle. Drag the view to turn it (double-click resets).
+
+Sanity checks: θ = 0 gives I; k = z gives the familiar rotation about z. Axis–angle is a compact way to store a rotation (3 numbers: the axis scaled by the angle). Quaternions (next) encode the same axis and angle.
+  </aside>
+</section>
+
+<!-- T42 -->
+<section>
+  <h1 class="title">Euler Angles</h1>
+  <ul class="abs bullets" style="left:260px; top:240px; width:1400px">
+    <li><b>Euler’s rotation theorem</b>: any rotation or sequence of rotations of a rigid body about a fixed point is equivalent to a single rotation by a given angle <span class="mr"><i>θ</i></span> about a fixed axis (called the <i>Euler axis</i>) that runs through the fixed point.</li>
+    <li><b>Euler angles</b>: the orientation of an object is specified by rotation angles about the X, Y, Z axes (performed in this order)</li>
+    <li>How can we smoothly interpolate between two different orientations?</li>
+    <li>Euler angle interpolation is not intuitive!</li>
+    <li>Gimbal Lock may occur…</li>
+  </ul>
+  <aside class="notes">
+The result of any sequence of rotations of a 3D object about a fixed point in space, may be equivalently achieved by a single rotation about a fixed axis that runs through the same point. 
+
+Related result: any orientation of a 3D object can be achieved by starting with the object in some canonical pose, and applying 3 rotations, one about each axis (in some predetermined order). This means that any orientation can be represented using 3 angles.
+
+Suppose we have two orientations and we’d like to interpolate between them. Since each orientation is represented using 3 angles, it’s natural to try to interpolate the three angles. However, the results are not always intuitive.
+  </aside>
+</section>
+
+<!-- T43 -->
+<section>
+  <h1 class="title">Euler Angles</h1>
+  <div class="abs caption" style="left:72px; width:1776px; top:480px; font-size:48px">Video: <a href="https://www.youtube.com/watch?v=zc8b2Jo7mno" target="_blank" rel="noopener">gimbal lock</a> (YouTube)</div>
+  <aside class="notes">
+(The original slide showed this video and a gimbal-lock animation; a live gimbal demo may replace them.)
+  </aside>
+</section>
+
+<!-- T44 -->
+<section>
+  <h1 class="title">Quaternions</h1>
+  <ul class="abs bullets" style="left:170px; top:260px; width:1150px">
+    <li>Rotations may be represented by unit quaternions:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="q=a+b\mathbf{i}+c\mathbf{j}+d\mathbf{k}" style="left:1340px; top:248px"></div>
+  <ul class="abs bullets" style="left:170px; top:400px; width:1150px">
+    <li><span class="mr"><i>a, b, c, d</i></span> are real numbers,</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="a^2+b^2+c^2+d^2=1" style="left:1340px; top:388px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{i}^2=\mathbf{j}^2=\mathbf{k}^2=\mathbf{ijk}=-1" style="left:0; width:1920px; top:520px; text-align:center"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{ij}=\mathbf{k}=-\mathbf{ji}\qquad\mathbf{jk}=\mathbf{i}=-\mathbf{kj}\qquad\mathbf{ki}=\mathbf{j}=-\mathbf{ik}" style="left:0; width:1920px; top:640px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:780px; width:1500px">
+    <li>Rotation by angle <span class="mr"><i>ϕ</i></span> about the unit vector <span class="mr">[<i>b, c, d</i>]</span> corresponds to the quaternion:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="q=\cos\frac{\phi}{2}+\sin\frac{\phi}{2}\,(b\mathbf{i}+c\mathbf{j}+d\mathbf{k})" style="left:0; width:1920px; top:870px; text-align:center"></div>
+  <aside class="notes">
+Another way to represent rotations that does not suffer from the same issues as Euler angles is by using quaternions.
+You can think of a quaternion as an extension of complex numbers, which instead of having just one imaginary coordinate have three such coordinates (in addition to a single real coordinate). So instead of the complex plane, we have the complex 4D space. 
+Here on the slide you have some rules for the imaginary units.
+A rotation about an arbitrary axis (unit vector) may be represented by a unit quaternion.
+  </aside>
+</section>
+
+<!-- T46 -->
+<section>
+  <h1 class="title">Quaternions (cont’d)</h1>
+  <ul class="abs bullets" style="left:120px; top:240px; width:1340px">
+    <li>A 3D vector <span class="mr"><b>v</b></span> may be rotated using a quaternion as follows:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf{q}\,[0,\mathbf{v}]\,\mathbf{q}^{-1}" style="left:1500px; top:228px"></div>
+  <ul class="abs bullets" style="left:200px; top:360px; width:300px">
+    <li>where:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="(a+b\mathbf{i}+c\mathbf{j}+d\mathbf{k})^{-1}=(a-b\mathbf{i}-c\mathbf{j}-d\mathbf{k})" style="left:480px; top:350px"></div>
+  <ul class="abs bullets" style="left:200px; top:480px; width:1400px">
+    <li>The rotation matrix corresponding to this rotation:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.6" data-tex="R=\begin{pmatrix}a^2+b^2-c^2-d^2&amp;2bc-2ad&amp;2bd+2ac\\2bc+2ad&amp;a^2-b^2+c^2-d^2&amp;2cd-2ab\\2bd-2ac&amp;2cd+2ab&amp;a^2-b^2-c^2+d^2\end{pmatrix}" style="left:0; width:1920px; top:580px; text-align:center"></div>
+  <ul class="abs bullets" style="left:200px; top:880px; width:1500px">
+    <li>Performing successive rotations corresponds to multiplying unit quaternions</li>
+  </ul>
+  <aside class="notes">
+To rotate a 3D point or vector, we convert it into a pure quaternion, by adding 0 as the real coordinate, and multiply the resulting quaternion with q from the left, and with its inverse from the right.
+
+Of course, as with any rotation, this is just a special case of an affine transformation, so it may be expressed as a matrix. The matrix is the one on the slide, but we’re not going to prove the derivation.
+
+In order to perform successive rotations, we can just multiply their corresponding quaternions. Again, we’re not going to prove that it’s equivalent to multiplying the rotation matrices of the form above, but you’re welcome to do this easy exercise on your own.
+  </aside>
+</section>
+
+<!-- T47 -->
+<section>
+  <h1 class="title">Quaternions (cont’d)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Unit quaternions can be thought of as points on the unit sphere in 4D</li>
+    <li>Interpolating between orientations can be done by spherical linear interpolation (slerp) between unit quaternions!</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathit{Slerp}(\mathbf{p},\mathbf{q};t)=\frac{\mathbf{p}\sin[(1-t)\theta]+\mathbf{q}\sin[t\theta]}{\sin\theta}" style="left:120px; top:520px"></div>
+  <img class="abs" src="./assets/slerp-DOyteP5w.svg" alt="Slerp vs. normalized lerp on a circle" style="left:960px; top:600px; width:940px; height:400px">
+  <aside class="notes">
+Finally, since rotations are represented by unit quaternions, you can think of them as points on a 4D unit sphere. Interpolating between them may be done by marching along an arc on that sphere, the portion of the great circle that connects the two points. This gives a unique and predictable way to interpolate between two orientations.
+  </aside>
+</section>
+
+<!-- T48 -->
+<section>
+  <h1 class="title">Transforming Planes</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>One way to transform a plane is by transforming any three non-collinear points on the plane.</li>
+    <li>Another way is to transform the plane equation coefficients <span class="mr">[<i>A,B,C,D</i>]</span> directly:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="Ax+By+Cz+D=\begin{bmatrix}A&amp;B&amp;C&amp;D\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=0" style="left:0; width:1920px; top:450px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:700px; width:1450px">
+    <li>Given a transformation <span class="mr"><i>T</i></span> that transforms <span class="mr">[<i>x,y,z</i>]</span> to <span class="mr">[<i>x′,y′,z′</i>]</span> find <span class="mr"><i>A′, B′, C′</i></span>, and <span class="mr"><i>D′</i></span>, such that:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}A&#x27;&amp;B&#x27;&amp;C&#x27;&amp;D&#x27;\end{bmatrix}\begin{bmatrix}x&#x27;\\y&#x27;\\z&#x27;\\1\end{bmatrix}=0" style="left:0; width:1920px; top:810px; text-align:center"></div>
+  <aside class="notes">
+A plane is defined by all points (x,y,z,1) whose scalar product with the plane equation coefficients vector (A,B,C,D) is 0.
+Thus, the transformed plane equation (A’,B’,C’,D’) must satisfy the same property for the transformed point (x’,y’,z’,1).
+  </aside>
+</section>
+
+<!-- T49 -->
+<section>
+  <h1 class="title">(continued)</h1>
+  <ul class="abs bullets" style="left:250px; top:330px; width:400px">
+    <li>Note that</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}A&amp;B&amp;C&amp;D\end{bmatrix}T^{-1}T\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=0" style="left:640px; top:240px"></div>
+  <ul class="abs bullets" style="left:250px; top:600px; width:800px">
+    <li>Thus, the transformation that we should apply to the plane equation is:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\left(T^{-1}\right)^{\mathsf T}\begin{bmatrix}A\\B\\C\\D\end{bmatrix}=\begin{bmatrix}A&#x27;\\B&#x27;\\C&#x27;\\D&#x27;\end{bmatrix}" style="left:1100px; top:520px"></div>
+  <ul class="abs bullets" style="left:250px; top:900px; width:1450px">
+    <li><span class="mr">[<i>A,B,C</i>]</span> is normal to the plane, so this is also how we transform normal vectors!</li>
+  </ul>
+  <aside class="notes">
+The first 3 coefficients of the plane equation define a vector normal to the plane. The proof is an easy exercise.
+Thus, a normal vector may be thought of as a plane equation with D=0, a plane that passes through the origin.
+Therefore, transforming normal vectors may be done using the method just derived for transforming the plane equation.
+It follows that a pure rotation is the same for normal vectors: Since the inverse is just the transpose, taking the transpose of the inverse gets us the original rotation. But a general transformation isn’t the same. For example, scaling to stretch along the x-axis will make the normal to shrink along its x coordinate.
+  </aside>
+</section>
+
+<!-- new: changing frames -->
+<section>
+  <h1 class="title">Changing Coordinate Frames</h1>
+  <img class="abs" src="./assets/frames-Bf1GuYgI.svg" alt="The world frame and a second frame with origin o and axes u, v, w; a point p" style="left:40px; top:250px; width:900px; height:620px">
+  <ul class="abs bullets" style="left:990px; top:240px; width:900px">
+    <li>A frame: an origin <span class="mr"><i>o</i></span> and orthonormal axes <span class="mr"><i>u</i>, <i>v</i>, <i>w</i></span></li>
+  </ul>
+  <div class="abs eq" data-scale="4.5" data-tex="p=o+a\,u+b\,v+c\,w" style="left:990px; width:900px; top:385px; text-align:center"></div>
+  <ul class="abs bullets" style="left:990px; top:480px; width:900px">
+    <li>Frame to world:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}p\\1\end{bmatrix}=\begin{bmatrix}u&amp;v&amp;w&amp;o\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}" style="left:990px; width:900px; top:555px; text-align:center"></div>
+  <ul class="abs bullets" style="left:990px; top:720px; width:900px">
+    <li>World to frame, with <span class="mr"><i>R</i> = [<i>u v w</i>]</span>:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}o\\0&amp;1\end{bmatrix}\begin{bmatrix}p\\1\end{bmatrix}" style="left:990px; width:900px; top:795px; text-align:center"></div>
+  <aside class="notes">
+New. Every transformation so far moved points within one coordinate system. The same matrices also change coordinates between frames. A frame is an origin o and three orthonormal axes u, v, w (given in world coordinates). A point with coordinates (a, b, c) in the frame is p = o + a u + b v + c w in the world: the matrix whose columns are u, v, w and o. Going the other way is its inverse; since R = [u v w] is orthonormal, R⁻¹ = Rᵀ, so the inverse is cheap: rotate by Rᵀ after translating by −o, which is the matrix shown.
+
+Two instances we use all the time: the modeling transformation (an object's own frame placed in the world: frame to world) and the viewing transformation (the world seen from the camera's frame: world to frame), which is how we will build the camera next.
+  </aside>
+</section>
+
+<!-- V1 -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Viewing in 3D</div>
+</section>
+
+<!-- V2 -->
+<section>
+  <h1 class="title">Taking a Real Photograph</h1>
+  <ul class="abs bullets" style="left:600px; top:330px; width:900px">
+    <li>Arrange objects</li>
+    <li>Position and point the camera</li>
+    <li>Choose a lens, set the zoom</li>
+    <li>Take a picture</li>
+    <li>Enlarge and crop to get a print</li>
+  </ul>
+  <aside class="notes">
+Imagine a real photographer setting up to take a photograph of an object.
+First, he arranges the objects in the desired configuration.
+Second, we place the camera in the scene and point it at some point of interest.
+Then, we adjust the zoom of the lens, and take the picture.
+After the image is taken, and the film is developed, we have an image on the film. This image is then enlarged and cropped to produce the final result. Note, that this last stage is a 2D to 2D transformation.
+  </aside>
+</section>
+
+<!-- V3 -->
+<section>
+  <h1 class="title">Taking a Virtual Photograph</h1>
+  <ul class="abs bullets" style="left:250px; top:240px; width:1450px">
+    <li>Arrange objects</li>
+    <li class="sub">Apply modeling transformations to objects: change from <i>object coordinates</i> to <i>world coordinates</i></li>
+    <li>Position and point the camera</li>
+    <li class="sub">Position, point, and orient the virtual camera: define a transformation from world to <i>eye coordinates</i></li>
+    <li>Choose a lens, set the zoom</li>
+    <li class="sub">Specify a view volume: define a perspective transformation that transforms eye coordinates to canonical normalized viewing space (<i>clip coordinates</i>)</li>
+  </ul>
+  <aside class="notes">
+The terminology and nomenclature for the different stages of 3D viewing, the different coordinate spaces, and their names is unfortunately non-uniform across different textbooks and different graphics APIs.
+We’ll stick with the viewing pipeline and the coordinate names used by OpenGL. 
+Arranging the objects in the desired configuration is done by applying to each object various modeling transformations (object to world coordinates transformations).
+Second, we place the camera in the scene and point it at some point of interest (viewing transformation: world to eye coordinates).
+Third, we choose the lens and adjust the zoom: this is equivalent to choosing a projective transformation.
+  </aside>
+</section>
+
+<!-- V4 -->
+<section>
+  <h1 class="title">Taking a Virtual Photograph</h1>
+  <ul class="abs bullets" style="left:250px; top:300px; width:1450px">
+    <li>Take a picture</li>
+    <li class="sub">Project objects by applying the projective transformation followed by a <i>perspective divide</i>. The result is <i>normalized device coordinates.</i></li>
+    <li>Enlarge and crop to get a print</li>
+    <li class="sub">Apply viewport transformation to obtain actual <i>window coordinates.</i></li>
+  </ul>
+  <aside class="notes">
+Third, we choose the lens and adjust the zoom: this is equivalent to choosing a projective transformation.
+Applying this transformation, followed by division by the fourth homogeneous coordinate is the equivalent of actually taking the picture.
+
+After this stage we might want to select a part of the image to show in a window of some specified size, and that’s accomplished using the viewport transformation.
+  </aside>
+</section>
+
+<!-- V5 -->
+<section>
+  <h1 class="title">Viewing in 3D</h1>
+  <ul class="abs bullets" style="left:300px; top:260px; width:1400px">
+    <li>How to transform 3D world coordinates to 2D display coordinates?</li>
+    <li class="sub">Projections</li>
+    <li>How to specify which part of the 3D world is to be viewed?</li>
+    <li class="sub">Define a 3D viewing volume</li>
+    <li>How to avoid displaying primitives outside the viewing volume?</li>
+    <li class="sub">Culling and Clipping</li>
+  </ul>
+  <aside class="notes">
+A few questions to be answered:
+First, what is the right way of transforming the 3D coordinates of the world to the 2D display coordinates?
+Second, how should the world viewing window be specified? 
+
+Solutions: projections and view volumes.
+
+How to avoid displaying primitives outside the view volume?
+Solution: culling and clipping.
+  </aside>
+</section>
+
+<!-- V6 -->
+<section>
+  <h1 class="title">3D Viewing Pipeline</h1>
+  <img class="abs" src="./assets/pipeline-CLcrBzLA.svg" alt="The 3D viewing pipeline" style="left:60px; top:250px; width:1800px; height:560px">
+  <aside class="notes">
+Conceptual pipeline: Get your objects from their individual coordinate systems into the eye (camera) coordinate system, where the 3D view volume is defined; clip 3D object against 3D view volume; then project to 2D (onto some viewing plane); finally transform into the display viewport, just like in 2D.
+  </aside>
+</section>
+
+<!-- new: look-at -->
+<section>
+  <h1 class="title">Positioning the Camera</h1>
+  <div class="demo" data-demo="lookat" data-world="20,190,930,620" data-unit="74" data-waz="-30" data-view="1010,200,840,630"></div>
+  <div class="abs caption gray" style="left:20px; width:930px; top:815px; font-size:34px">the world (drag to turn it)</div>
+  <div class="abs caption gray" style="left:1010px; width:840px; top:840px; font-size:34px">what the camera sees (drag to move the eye <span class="mr"><i>e</i></span>)</div>
+  <div class="abs eq" data-scale="3.8" data-tex="w=\frac{e-c}{\|e-c\|},\quad u=\frac{\mathrm{up}\times w}{\|\mathrm{up}\times w\|},\quad v=w\times u" style="left:20px; width:930px; top:875px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="V=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}e\\0&amp;1\end{bmatrix},\quad R=[\,u\;v\;w\,]" style="left:20px; width:930px; top:975px; text-align:center"></div>
+  <div class="abs eq lookat-matrix" style="left:1010px; width:840px; top:895px; text-align:center"></div>
+  <aside class="notes">
+New. The first stage of the pipeline, world to eye coordinates, built from three things the user specifies: the eye position e, a target point c to look at, and an "up" direction (usually the world's y axis). The camera looks down its own −w axis (the OpenGL convention), so w points from the target back to the eye. u = up × w is horizontal (perpendicular to up and to the viewing direction), and v = w × u completes the frame: it is the camera's own "up", the projection of the up vector onto the image plane. The view matrix is the world-to-frame matrix of the previous section, with the camera's frame: V = [Rᵀ, −Rᵀe], R = [u v w]. Its rows are u, v, w, with −u·e, −v·e, −w·e in the last column. This is gluLookAt (glm::lookAt).
+
+Demo: drag the right view to move the eye around the target (double-click resets); the target stays at the center of the image, the view matrix updates. Drag the left view to turn the world view.
+
+Up must not be parallel to the viewing direction (then up × w = 0): looking straight down needs another up vector. Tilting up rolls the camera about its viewing direction.
+
+In the camera's frame the eye is at the origin, looking down −z: exactly the setting in which the projection matrices of the next section are derived.
+  </aside>
+</section>
+
+<!-- V10 -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Projections</div>
+</section>
+
+<!-- V11 -->
+<section>
+  <h1 class="title">Planar Geometric Projections</h1>
+  <ul class="abs bullets" style="left:300px; top:260px; width:1400px">
+    <li>A projection is formed by the intersection of certain <b><i>lines</i></b> (projectors) with a <b><i>plane</i></b> (the projection plane)</li>
+    <li>Projectors are lines from the center of projection through each point on object</li>
+    <li>Center of projection at infinity results in a <b><i>parallel projection</i></b></li>
+    <li>A finite center of projection results in a <b><i>perspective projection</i></b></li>
+  </ul>
+  <aside class="notes">
+These types of projections are called “planar geometric projections”. They are called planar, because the projection is onto a plane, rather than some curved surface, and geometric because the projectors are straight lines, rather than curves.
+  </aside>
+</section>
+
+<!-- V12 -->
+<section>
+  <h1 class="title">Non-Planar Projections</h1>
+  <ul class="abs bullets" style="left:260px; top:300px; width:1400px">
+    <li>Planar geometric projections: straight projectors, onto a plane</li>
+    <li>Many useful projections are not:</li>
+    <li class="sub">Fisheye lenses: the rays are bent, the image is a disk</li>
+    <li class="sub">Maps of the Earth: onto a cylinder (or a cone), and not by projectors</li>
+  </ul>
+  <aside class="notes">
+Many projections are either nonplanar or non-geometric. They are called "planar" because the projection is onto a plane, rather than some curved surface, and "geometric" because the projectors are straight lines, rather than curves. The next two slides take one example each, in the same way: first onto a sphere of directions, then a chosen mapping from the sphere to the plane.
+
+The Fisheye lens, and some other wide angle lenses implement a non-geometric projection, because light rays are bent by such lenses. The familiar Mercator projection (Flemish cartographer Gerardus Mercator, 1569) projects the surface of the Earth onto a cylinder, so it is nonplanar.
+
+(The old figures, a fisheye view of a box-shaped room and a Mercator graticule, are replaced by the two demo slides that follow.)
+  </aside>
+</section>
+
+<!-- V12b: new -->
+<section>
+  <h1 class="title">Fisheye Projection</h1>
+  <div class="demo" data-demo="fisheye" data-left="30,185,1060,730" data-ox="200" data-oy="365" data-unit="230">
+    <canvas class="gl" data-w="640" style="left:1200px; top:195px"></canvas>
+  </div>
+  <div class="abs caption gray fisheye-note" style="left:1100px; width:840px; top:842px; font-size:34px">a perspective image cannot reach 180°</div>
+  <div class="abs choices" style="left:1200px; top:892px; width:640px; justify-content:center" data-prevent-swipe>
+    <button data-value="perspective">perspective</button>
+    <button data-value="fisheye">fisheye</button>
+  </div>
+  <div class="abs demo" style="left:1200px; top:978px; width:640px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-fov" style="width:330px"></span><input type="range" name="fov" min="40" max="180" step="1"></div>
+  </div>
+  <div class="abs caption" style="left:60px; top:958px; width:260px; text-align:right">perspective</div>
+  <div class="abs eq" data-tex="r=f\tan\theta" style="left:350px; top:944px"></div>
+  <div class="abs caption" style="left:640px; top:958px; width:180px; text-align:right">fisheye</div>
+  <div class="abs eq" data-tex="r=f\,\theta" style="left:850px; top:944px"></div>
+  <span class="fragment"></span>
+  <aside class="notes">
+New. Why a fisheye image is a circle. Project in two steps: first onto a hemisphere around the COP (all that is left of a point is its direction: the angle θ from the optical axis and the angle around it), then flatten the hemisphere onto the image plane. Perspective sends a direction at angle θ to distance f tan θ from the center, which runs off to infinity as θ approaches 90°: a plane can never hold a 180° field of view. The (equidistant) fisheye sends it to f θ, the length of the arc, unrolled onto the plane: at 90° that is f π/2, finite. The whole hemisphere fits in a disk, and its rim (the directions at 90° to the axis) is the circle.
+
+Demo: drag the projector on the left (double-click resets); the point where it hits the wall is marked in both views. Right: the room seen from its middle, computed per pixel. Switch to perspective and raise the field of view: the walls stretch without bound (perspective stops at 170° here). In the fisheye at 180°, the back wall is in the middle and the four side walls all around it, up to the plane of the camera.
+
+Step: two straight lines on the ceiling, one across the room and one along it. A line and the COP span a plane, which cuts the sphere in a great circle; a great circle maps to a curve in the fisheye image, unless that plane contains the optical axis: a line parallel to the axis (like the one along the ceiling, or the room's long edges) points at the image center and stays straight. In perspective, both are straight.
+
+Optional: other lens models put the same direction at other distances: equisolid angle 2f sin(θ/2), stereographic 2f tan(θ/2), orthographic f sin θ. Real lenses are close to one of these; calibration measures the actual r(θ).
+  </aside>
+</section>
+
+<!-- V12c: new -->
+<section>
+  <h1 class="title">Cylindrical Projections</h1>
+  <div class="demo" data-demo="cylindrical" data-left="30,190,860,700" data-ox="340" data-oy="380" data-unit="210" data-map="930,195,940,680"></div>
+  <div class="abs choices" style="left:930px; top:893px; width:940px; justify-content:center" data-prevent-swipe>
+    <button data-value="central">central</button>
+    <button data-value="mercator">Mercator</button>
+    <button data-value="equirectangular">equirectangular</button>
+  </div>
+  <div class="abs eq cyl-eq" style="left:930px; width:940px; top:968px; text-align:center"></div>
+  <span class="fragment"></span>
+  <aside class="notes">
+New; the companion of the fisheye slide. Optional, if time is short. Wrap a cylinder around the globe, touching it at the equator. Every map in this family unrolls longitude evenly, x = R λ, and differs only in the height y it gives latitude φ. Left: a meridian seen from the side; drag the point (double-click resets). All three maps are drawn at the same scale.
+
+Central cylindrical: the projector through the center of the Earth meets the cylinder at R tan φ. A true geometric projection, the analog of perspective (f tan θ): it runs off to infinity at the poles, fast. Equirectangular: the arc length R φ, unrolled, like the fisheye's f θ: the whole sphere fits in a 2:1 rectangle. Mercator: not a projection by projectors at all. At latitude φ the parallel (circumference 2πR cos φ) is stretched to the full width 2πR, by sec φ; Mercator stretches north-south by the same factor, dy/dφ = R sec φ, which integrates to y = R ln tan(π/4 + φ/2). The map is conformal: small shapes keep their angles.
+
+The Tissot circles are identical small circles on the globe. Mercator keeps them circles, but they grow toward the poles (conformal, not equal-area: Greenland looks as large as Africa, which is 14 times larger). Equirectangular stretches them sideways into ellipses; central cylindrical stretches them even more vertically.
+
+Step: a rhumb line, a route of constant compass bearing (65° east of north). It crosses every meridian at the same angle, so in the conformal Mercator map it is a straight line: why navigators used it. In the other two maps it curves.
+
+Visual computing connection: the equirectangular map is the standard format for 360° panoramas and environment maps (the whole sphere of directions in one rectangle), which come back in weeks 8 and 12.
+
+Coastlines: Natural Earth 1:110m land (public domain), converted by tools/make_land.py.
+  </aside>
+</section>
+
+<!-- V13 -->
+<section>
+  <h1 class="title">Parallel Projection</h1>
+  <div class="demo" data-demo="projection" data-mode="parallel" data-left="330" data-top="190" data-w="1260" data-h="870" data-ox="780" data-oy="470" data-unit="125" data-az="-62" data-el="16"></div>
+  <aside class="notes">
+In the case of parallel projection, we refer to the direction of projection, corresponding to a point [x,y,z,0] in homogeneous coordinates.
+Intuition: a direction can be specified by a difference between two points: [x1,y1,z1,1] - [x2,y2,z2,1] = [x,y,z,0]
+Note how the use of homogeneous coordinates allows us to treat finite and infinite centers of projection in a uniform manner!
+
+Demo: drag the background to turn the view; double-click to reset. The projectors run from each vertex to the plane, and continue along the direction of projection (DOP).
+  </aside>
+</section>
+
+<!-- V14 -->
+<section>
+  <h1 class="title">Parallel Projection</h1>
+  <img class="abs" src="./assets/parallel4-CqNGbvx2.svg" alt="The same house in four parallel projections" style="left:60px; top:280px; width:1800px; height:651px">
+  <aside class="notes">
+Here are a few examples of parallel projection.
+
+(Redrawn: the house of week 2, extruded, in four parallel projections.)
+  </aside>
+</section>
+
+<!-- V15 -->
+<section>
+  <h1 class="title">Orthographic Projection</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Projectors are orthogonal to projection surface, which is typically parallel to one of the coordinate planes:</li>
+  </ul>
+  <div class="demo" data-demo="projection" data-mode="orthographic" data-left="330" data-top="330" data-w="1260" data-h="740" data-ox="780" data-oy="400" data-unit="115" data-az="-62" data-el="16"></div>
+  <aside class="notes">
+In orthographic projection, the projectors (lines) are orthogonal to the projection plane. 
+
+Preserves both distances and angles in 3D planes that are parallel to the projection plane:
+Can be used for measurements of lengths (up to scale) and angles in such planes
+Useful for building plans, part drawings, etc.
+
+Demo: drag the background to turn the view; double-click to reset. The projectors run from each vertex to the plane.
+  </aside>
+</section>
+
+<!-- V16 -->
+<section>
+  <h1 class="title">Orthographic Projection</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Convenient for measuring distances and angles.</li>
+    <li>Typically several simultaneous projections are shown.</li>
+  </ul>
+  <img class="abs" src="./assets/multiview-mR7kGueV.svg" alt="Four viewports: top, front and side views of the house, and an isometric view" style="left:368px; top:400px; width:1184px; height:644px">
+  <aside class="notes">
+Typically used in a multi-view setting: three projection planes parallel to the coordinate planes, resulting in a top, front, and side views, shown simultaneously.
+
+Cannot see what object really looks like because many surfaces hidden from view
+
+Thus, often we add the isometric view, where the projection direction (and plane) are chosen such that the three world axes appear equally foreshortened, forming an angle of 120 degrees between each pair of axes.
+
+(Redrawn: top, front and side views of the house, with an isometric view.)
+  </aside>
+</section>
+
+<!-- V17 -->
+<section>
+  <h1 class="title">Axonometric Projections</h1>
+  <ul class="abs bullets" style="left:120px; top:260px; width:780px">
+    <li>Projectors are orthogonal to projection surface, which is NOT parallel to one of the coordinate planes</li>
+    <li>How many angles of an axis-aligned cube’s corner are equal?</li>
+    <li class="sub">none: trimetric</li>
+    <li class="sub">two: dimetric</li>
+    <li class="sub">three: isometric</li>
+  </ul>
+  <div class="demo" data-demo="projection" data-mode="axonometric" data-left="900" data-top="190" data-w="1000" data-h="870" data-ox="620" data-oy="470" data-unit="110" data-az="-62" data-el="16"></div>
+  <aside class="notes">
+Projectors are still perpendicular to the plane, but the plane isn’t parallel to one of the three coordinate system planes.
+Lines are scaled (foreshortened) but can find scaling factors
+Lines preserved but angles are not
+Projection of a circle in a plane not parallel to the projection plane is an ellipse
+Can see three principal faces of a box-like object
+Some optical illusions possible
+Parallel lines appear to diverge
+Does not look real because far objects are scaled the same as near objects
+Used in CAD applications
+
+Demo: drag the background to turn the view; double-click to reset. The projectors run from each vertex to the plane.
+  </aside>
+</section>
+
+<!-- V18 -->
+<section>
+  <h1 class="title">Axonometric Projections</h1>
+  <img class="abs" src="./assets/axono3-DkU7nKIu.svg" alt="A cube in trimetric, dimetric and isometric projection" style="left:60px; top:330px; width:1800px; height:504px">
+  <aside class="notes">
+Lines are scaled (foreshortened) but can find scaling factors
+Lines preserved but angles are not
+Projection of a circle in a plane not parallel to the projection plane is an ellipse
+Can see three principal faces of a box-like object
+Some optical illusions possible
+Parallel lines appear to diverge
+Does not look real because far objects are scaled the same as near objects
+Used in CAD applications
+
+(Redrawn: a cube in the three axonometric projections.)
+  </aside>
+</section>
+
+<!-- V19 -->
+<section>
+  <h1 class="title">Oblique Projections</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Arbitrary relationship between projectors and projection plane.</li>
+  </ul>
+  <div class="demo" data-demo="projection" data-mode="oblique" data-left="330" data-top="330" data-w="1260" data-h="740" data-ox="780" data-oy="400" data-unit="115" data-az="-62" data-el="16"></div>
+  <aside class="notes">
+Examples:
+
+Cavalier: direction of projection makes a 45 degree angle with the projection plane. As a result, both lines parallel and perpendicular to the projection plane preserve their lengths.
+
+Cabinet: direction of projection makes an angle of arctan(2) with the projection plane. Thus, perpendicular lines appear at half their length, resulting in a slightly more perspective-like appearance (compared to Cavalier).
+
+Demo: drag the background to turn the view; double-click to reset. The projectors run from each vertex to the plane.
+  </aside>
+</section>
+
+<!-- V20 -->
+<section>
+  <h1 class="title">Perspective Projection</h1>
+  <div class="demo" data-demo="projection" data-mode="perspective" data-left="200" data-top="190" data-w="1520" data-h="870" data-ox="700" data-oy="470" data-unit="120" data-az="-62" data-el="16"></div>
+  <aside class="notes">
+The center of projection for perspective projection is a point,
+denoted [x,y,z,1] in homogeneous coordinates.
+
+Demo: drag the background to turn the view; double-click to reset. The projectors run from each vertex to the plane and on to the center of projection (COP).
+  </aside>
+</section>
+
+<!-- V21 -->
+<section>
+  <h1 class="title">Parallel vs. Perspective Projection</h1>
+  <img class="abs" src="./assets/par_vs_persp-DN1NHGfc.svg" alt="The same street of boxes in parallel and in perspective projection" style="left:60px; top:300px; width:1800px; height:564px">
+  <aside class="notes">
+Parallel projection makes it difficult to understand the 3D relationships in the scene, while perspective projection conveys the 3D relationships better.
+
+(Redrawn: the same street of boxes, seen from the same direction, in parallel and in perspective projection. In parallel projection the far boxes are as large as the near ones and the rows stay parallel; in perspective they shrink with distance and the rows converge.)
+  </aside>
+</section>
+
+<!-- V22 -->
+<section>
+  <h1 class="title">Vanishing Points</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Parallel lines (not parallel to the projection plane) in the scene converge at a single point on the projection plane (the vanishing point):</li>
+  </ul>
+  <img class="abs" src="./assets/vanishing-Dbu467yt.svg" alt="A one-point perspective street, its edges extended to the vanishing point" style="left:385px; top:390px; width:1150px; height:664px">
+</section>
+
+<!-- V23 -->
+<section>
+  <h1 class="title">N-point Perspective</h1>
+  <img class="abs" src="./assets/npoint-BV7tChtB.svg" alt="A cube in one-, two- and three-point perspective" style="left:60px; top:300px; width:1800px; height:564px">
+  <aside class="notes">
+The number of vanishing points traditionally only considers directions parallel to the three coordinate axes in the scene.
+
+(Redrawn: a cube in one-, two- and three-point perspective; the dashed lines extend its edges to their vanishing points.)
+  </aside>
+</section>
+
+<!-- V24 -->
+<section>
+  <h1 class="title">Taxonomy of Projections</h1>
+  <img class="abs" src="./assets/taxonomy-xgYJ23aj.svg" alt="A tree of the planar geometric projections" style="left:160px; top:250px; width:1600px; height:689px">
+  <aside class="notes">
+Summary
+
+There are two basic classes of planar geometric projections: parallel and perspective. When defining a parallel projection we must specify the direction of projection, when defining a perspective projection we must specify the center of projection.
+
+Although traditionally parallel and perspective may be further split to classes, in OpenGL we only have these two main types.
+  </aside>
+</section>
+
+<!-- V25 -->
+<section>
+  <h1 class="title">Orthographic Projection Matrix</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Direction of projection is normal to the projection plane.</li>
+    <li>Typically, project onto one of the coordinate planes. For example onto the <span class="mr"><i>z</i> = 0</span> plane:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;0&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\\0\\1\end{bmatrix}" style="left:0; width:1920px; top:470px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:850px; width:1450px">
+    <li>This matrix discards all depth information, so it cannot be used in the graphics pipeline.</li>
+  </ul>
+  <aside class="notes">
+When the projection is parallel to one of the axes, the other two coordinates should not change - so the matrix is a simple modification of the identity.
+
+Note that the matrix contains a row of zeros. Consequently, the determinant of a projection transformation is always zero.
+What does this imply regarding the inverse of the projection matrix? The matrix has no inverse (singular).
+In particular, this means that we have lost all depth information, which is needed for hidden surface removal. So another solution is needed for the graphics pipeline.
+  </aside>
+</section>
+
+<!-- V26 -->
+<section>
+  <h1 class="title">Orthographic Projection (in OpenGL)</h1>
+  <ul class="abs bullets" style="left:120px; top:230px; width:900px">
+    <li>Specify the boundaries of an axis aligned view volume in eye coordinates:</li>
+    <li class="sub">(<i>left, right, bottom, top, near, far</i>)</li>
+  </ul>
+  <img class="abs" src="./assets/ortho_volume-BICBfwhy.svg" alt="An axis-aligned view volume with its six bounds" style="left:1040px; top:190px; width:860px; height:573px">
+  <ul class="abs bullets" style="left:120px; top:700px; width:840px">
+    <li>Map the above view volume to normalized device coordinates (everything in <span class="mr">[−1,1]<sup>3</sup></span>):</li>
+    <li>All three dimensions are preserved!</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}\frac{2}{r-l}&amp;0&amp;0&amp;-\frac{r+l}{r-l}\\0&amp;\frac{2}{t-b}&amp;0&amp;-\frac{t+b}{t-b}\\0&amp;0&amp;\frac{-2}{f-n}&amp;-\frac{f+n}{f-n}\\0&amp;0&amp;0&amp;1\end{bmatrix}" style="left:1050px; top:690px"></div>
+  <aside class="notes">
+The modeling and world coordinate systems are right-handed by convention.
+The camera in OpenGL is looking down the negative Z axis (i.e., it points away from the camera along the camera optical axis), but the far and near parameters are typically positive numbers, and f &gt; n. 
+Note that this matrix flips the Z axis, thereby switching to a left-handed coordinate system, where larger values are farther away from the viewer than the smaller ones.
+
+Unity: Matrix4x4.Ortho(left, right, bottom, top, near, far);
+  </aside>
+</section>
+
+<!-- V28 -->
+<section>
+  <h1 class="title">Perspective Projection</h1>
+  <img class="abs" src="./assets/persp_triangles-B5qbZhOO.svg" alt="Similar triangles: the point (x,y,z) projects to (x&#x27;,y&#x27;,d) on the plane z = d" style="left:90px; top:200px; width:800px; height:460px">
+  <div class="abs eq" data-scale="5" data-tex="\frac{x&#x27;}{d}=\frac{x}{z}\;\Rightarrow\;x&#x27;=\frac{xd}{z}" style="left:1000px; top:250px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\frac{y&#x27;}{d}=\frac{y}{z}\;\Rightarrow\;y&#x27;=\frac{yd}{z}" style="left:1000px; top:420px"></div>
+  <div class="abs eq" data-scale="4.6" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;1/d&amp;0\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\\z\\z/d\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}xd/z=x&#x27;\\yd/z=y&#x27;\\zd/z=d\\1\end{bmatrix}" style="left:0; width:1920px; top:720px; text-align:center"></div>
+  <aside class="notes">
+Consider a perspective projection where the center of projection is at the origin and the projection plane is z = d. The projection of an arbitrary point (x,y,z) is (x’,y’,d). Using similar triangles we can write the expressions for x’ and y’. It is quite simple using homogeneous coordinates to come up with a matrix that achieves this transformation. 
+
+Again, this matrix discards all depth information, so it’s not what we need for the graphics pipeline!
+  </aside>
+</section>
+
+<!-- V29 -->
+<section>
+  <h1 class="title">Observations</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>The rank of the matrix is 3 (= projection)</li>
+    <li>Points on the projection plane are not changed by the perspective projection</li>
+    <li>Let’s see what happens to a point at infinity along the Z axis:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;1/d&amp;0\end{bmatrix}\begin{bmatrix}0\\0\\1\\0\end{bmatrix}=\begin{bmatrix}0\\0\\1\\1/d\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}0\\0\\d\\1\end{bmatrix}" style="left:0; width:1920px; top:560px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:900px; width:1450px">
+    <li>This is a vanishing point!</li>
+  </ul>
+  <aside class="notes">
+Single-point perspective transformations with vanishing points on the x and the y axes, respectively, are obtained in the same way.
+Two-point and three-point transformations are obtained by setting more than one entry in the fourth row to nonzero.
+  </aside>
+</section>
+
+<!-- V30 -->
+<section>
+  <h1 class="title">Perspective Projection on a General Plane</h1>
+  <div class="abs eq" data-scale="5" data-tex="Ax+By+Cz-D=0" style="left:120px; top:200px"></div>
+  <img class="abs" src="./assets/general_plane-DmO3NU6x.svg" alt="Projecting a point toward the origin onto a general plane" style="left:60px; top:280px; width:720px; height:413px">
+  <div class="abs caption" style="left:900px; width:900px; top:210px">Project <span class="mr">(<i>x,y,z</i>)</span> onto <span class="mr">(<i>A,B,C</i>)</span>:</div>
+  <div class="abs eq" data-scale="4.2" data-tex="\begin{bmatrix}x&amp;y&amp;z\end{bmatrix}\begin{bmatrix}A\\B\\C\end{bmatrix}=Ax+By+Cz" style="left:1000px; top:270px"></div>
+  <div class="abs eq" data-scale="4" data-tex="\frac{x&#x27;}{D}=\frac{x}{Ax+By+Cz}\Rightarrow x&#x27;=\frac{Dx}{Ax+By+Cz}" style="left:900px; top:470px"></div>
+  <div class="abs eq" data-scale="4" data-tex="\frac{y&#x27;}{D}=\frac{y}{Ax+By+Cz}\Rightarrow y&#x27;=\frac{Dy}{Ax+By+Cz}" style="left:900px; top:570px"></div>
+  <div class="abs eq" data-scale="4" data-tex="\frac{z&#x27;}{D}=\frac{z}{Ax+By+Cz}\Rightarrow z&#x27;=\frac{Dz}{Ax+By+Cz}" style="left:900px; top:670px"></div>
+  <div class="abs eq" data-scale="4" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\\frac{A}{D}&amp;\frac{B}{D}&amp;\frac{C}{D}&amp;0\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\\z\\\frac{Ax+By+Cz}{D}\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}\frac{Dx}{Ax+By+Cz}\\\frac{Dy}{Ax+By+Cz}\\\frac{Dz}{Ax+By+Cz}\\1\end{bmatrix}" style="left:0; width:1920px; top:800px; text-align:center"></div>
+  <aside class="notes">
+Consider a perspective projection where the center of projection is at the origin and the projection plane is some general plane, not perpendicular to any of the 3 main axes. &lt;click&gt;
+We further assume the plane equation is normalized.
+This means that the distance between the plane and the origin is D, and the normal vector to the plane is [A,B,C] &lt;click&gt;
+The projection of a general point (x,y,z) onto the optical axis is Ax+By+Cz &lt;click&gt;
+
+Now we can use similar triangles again, to obtain an expression for x’ (the projection of x onto the plane).
+As we can see, the projection is obtained by multiplying with D and dividing by the distance along the optical axis.
+This can be carried out by multiplying with the following projection matrix &lt;click&gt;:
+
+After dividing by the homogeneous coordinate, we get exactly what we want.
+  </aside>
+</section>
+
+<!-- V31 -->
+<section>
+  <h1 class="title">Perspective Projection on a General Plane</h1>
+  <div class="abs eq" data-scale="5" data-tex="Ax+By+Cz-D=0" style="left:120px; top:200px"></div>
+  <img class="abs" src="./assets/general_plane2-BpkwWdIK.svg" alt="The projected point is t times the original" style="left:60px; top:280px; width:720px; height:413px">
+  <div class="abs eq" data-scale="4.6" data-tex="(x&#x27;,y&#x27;,z&#x27;)=t\,(x,y,z)=(tx,ty,tz)" style="left:900px; top:260px"></div>
+  <div class="abs eq" data-scale="4.6" data-tex="Atx+Bty+Ctz-D=0" style="left:900px; top:380px"></div>
+  <div class="abs eq" data-scale="4.6" data-tex="t=\frac{D}{Ax+By+Cz}" style="left:900px; top:490px"></div>
+  <div class="abs eq" data-scale="4" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\\frac{A}{D}&amp;\frac{B}{D}&amp;\frac{C}{D}&amp;0\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\\z\\\frac{Ax+By+Cz}{D}\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}\frac{Dx}{Ax+By+Cz}\\\frac{Dy}{Ax+By+Cz}\\\frac{Dz}{Ax+By+Cz}\\1\end{bmatrix}" style="left:0; width:1920px; top:800px; text-align:center"></div>
+  <aside class="notes">
+Consider a perspective projection where the center of projection is at the origin and the projection plane is some general plane, not perpendicular to any of the 3 main axes. &lt;click&gt;
+On the one hand, we know that (x’,y’,z’) lies on the line connecting the origin and (x,y,z), so it may be expressed as t(x,y,z) &lt;click&gt;
+On the other hand we know this point lies on the projection plane so it must satisfy it’s equation &lt;click&gt;
+From this we can derive the value of t, and then construct a homogeneous matrix that achieves the desired outcome. &lt;click&gt;
+  </aside>
+</section>
+
+<!-- V32 -->
+<section>
+  <h1 class="title">Multiple Vanishing Points</h1>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\\frac{A}{D}&amp;\frac{B}{D}&amp;\frac{C}{D}&amp;0\end{bmatrix}\begin{bmatrix}1\\0\\0\\0\end{bmatrix}=\begin{bmatrix}1\\0\\0\\\frac{A}{D}\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}\frac{D}{A}\\0\\0\\1\end{bmatrix}" style="left:0; width:1920px; top:250px; text-align:center"></div>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\\frac{A}{D}&amp;\frac{B}{D}&amp;\frac{C}{D}&amp;0\end{bmatrix}\begin{bmatrix}x\\y\\z\\0\end{bmatrix}=\begin{bmatrix}x\\y\\z\\\frac{Ax+By+Cz}{D}\end{bmatrix}\;\Rightarrow\;\begin{bmatrix}\frac{Dx}{Ax+By+Cz}\\\frac{Dy}{Ax+By+Cz}\\\frac{Dz}{Ax+By+Cz}\\1\end{bmatrix}" style="left:0; width:1920px; top:620px; text-align:center"></div>
+  <aside class="notes">
+If we now consider a direction parallel to one of the axes, for example the x-axis, we see that this direction, which corresponds to a point at infinity, is mapped to a point on the projection plane.
+
+More generally, any direction (x,y,z) not parallel to the projection plane will have a vanishing point exactly at the same location where a finite point (x,y,z,1) projects to.
+  </aside>
+</section>
+
+<!-- V33 -->
+<section>
+  <h1 class="title">Perspective Projection (in OpenGL)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Specify a pyramidal view volume (view frustum) in eye coordinates:</li>
+  </ul>
+  <img class="abs" src="./assets/frustum-CdVlVK8-.svg" alt="The view frustum: the eye at the origin, the near and far planes" style="left:385px; top:330px; width:1150px; height:701px">
+  <aside class="notes">
+glFrustum defines a perspective transformation matrix as follows: (left,bottom,-near) and (right,top,-near) specify the points on the near clipping plane that are mapped to the lower left and the upper right corners of the window, respectively, assuming that the camera is located at (0,0,0). The far clipping plane is positioned at -far. Thus, we’re looking along the negative Z axis.
+  </aside>
+</section>
+
+<!-- V34 -->
+<section>
+  <h1 class="title">Perspective Projection Matrix</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Maps the view volume (view frustum) to normalized device coordinates (everything in <span class="mr">[−1,1]<sup>3</sup></span>):</li>
+  </ul>
+  <div class="abs eq" data-scale="5.5" data-tex="\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;\frac{r+l}{r-l}&amp;0\\0&amp;\frac{2n}{t-b}&amp;\frac{t+b}{t-b}&amp;0\\0&amp;0&amp;-\frac{f+n}{f-n}&amp;\frac{-2fn}{f-n}\\0&amp;0&amp;-1&amp;0\end{bmatrix}" style="left:0; width:1920px; top:450px; text-align:center"></div>
+  <aside class="notes">
+Notes:
+As long as the window defined by (r,l) and (t,b) is symmetric about the Z-axis (in other words l = -r and b = -t), the shearing terms in the third column are identically zero, and no shearing will take place.
+Making r and l closer to each other (shrinking the horizontal width of the window) results in an increase in the X-axis scaling – horizontal zoom. Similarly, making t and b closer zooms along the Y-axis. In fact, (2n/(r-l)) is simply 1/tan(h) where h is the half the horizontal viewing angle.
+  </aside>
+</section>
+
+<!-- V35 -->
+<section>
+  <h1 class="title">Perspective Projection Matrix</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:600px">
+    <li>Example:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;\frac{r+l}{r-l}&amp;0\\0&amp;\frac{2n}{t-b}&amp;\frac{t+b}{t-b}&amp;0\\0&amp;0&amp;-\frac{f+n}{f-n}&amp;\frac{-2fn}{f-n}\\0&amp;0&amp;-1&amp;0\end{bmatrix}\begin{bmatrix}l\\b\\-n\\1\end{bmatrix}=\begin{bmatrix}-n\\-n\\-n\\n\end{bmatrix}=\begin{bmatrix}-1\\-1\\-1\\1\end{bmatrix}" style="left:0; width:1920px; top:420px; text-align:center"></div>
+  <aside class="notes">
+Example:
+By multiplying the eye coordinates of the bottom left corner of the view frustum we see that after the division by the homogeneous coordinate we get [-1,-1,-1].
+Similarly to parallel projection, the NDC range is between -1 and 1 for all three coordinates, and the NDC coordinate system is left-handed: farther away points have a larger Z coordinate (closer to 1).
+  </aside>
+</section>
+
+<!-- new -->
+<section>
+  <h1 class="title">The View Frustum</h1>
+  <div class="demo" data-demo="frustum" data-left="20,190,960,600" data-right="1020,430,860,370"></div>
+  <div class="abs eq frustum-matrix" style="left:1000px; width:900px; top:195px; text-align:center"></div>
+  <div class="abs caption gray" style="left:20px; width:960px; top:785px; font-size:36px">eye coordinates</div>
+  <div class="abs caption gray" style="left:1020px; width:860px; top:795px; font-size:36px">normalized device coordinates</div>
+  <div class="abs demo" style="left:80px; top:870px; width:1760px; display:grid; grid-template-columns:1fr 1fr; column-gap:120px; row-gap:18px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-n" style="width:300px"></span><input type="range" name="n" min="0.5" max="3" step="0.05"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-fov" style="width:330px"></span><input type="range" name="fov" min="20" max="110" step="1"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-f" style="width:300px"></span><input type="range" name="f" min="3" max="12" step="0.1"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-shift" style="width:330px"></span><input type="range" name="shift" min="-0.5" max="0.5" step="0.05"></div>
+  </div>
+  <aside class="notes">
+New: the perspective projection matrix at work. Left, the view frustum in eye coordinates (the eye at the origin, looking down −z) with an object inside; right, the normalized device cube with the same object after the matrix and the division by w. The near plane maps to z = −1, the far plane to z = 1; note how the far half of the frustum is squeezed into a thin slab near z = 1 (the nonlinear depth mapping, a few slides on). The off-axis shift makes the frustum skewed: the shear terms (r+l)/(r−l) and (t+b)/(t−b) become nonzero.
+
+Demo: move the sliders; drag either view to turn it. The matrix updates live.
+  </aside>
+</section>
+
+<!-- V36 -->
+<section>
+  <h1 class="title">Derivation, part I (affine)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>The view volume is defined as a general (possibly skewed) viewing pyramid. We first make this pyramid into a canonical one:</li>
+    <li>We first shear the skewed pyramid, then scale.</li>
+  </ul>
+  <img class="abs" src="./assets/deriv3-BOunD4vo.svg" alt="The skewed pyramid, the symmetric pyramid, the canonical pyramid" style="left:210px; top:560px; width:1500px; height:420px">
+</section>
+
+<!-- V37 -->
+<section>
+  <h1 class="title">Shearing Matrix</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Transforms the center of the viewing window on the near plane <span class="mr">[(<i>r</i>+<i>l</i>)/2, (<i>t</i>+<i>b</i>)/2, −<i>n</i>]</span> to <span class="mr">[0, 0, −<i>n</i>]</span>, making the view pyramid symmetric about the Z-axis:</li>
+  </ul>
+  <img class="abs" src="./assets/shear-CaarkHur.svg" alt="Shearing the skewed pyramid into a symmetric one" style="left:460px; top:560px; width:1000px; height:440px">
+  <aside class="notes">
+What is the appropriate shearing transform? Consider the line through the center of the skewed pyramid. It goes from the origin to the point ((r+l)/2, (t+b)/2, -n)
+After shearing we’d like this vector to lie on the negative z-axis, transforming the point above onto (0, 0, -n). It is easy to see that this can be accomplished by the above matrix.
+  </aside>
+</section>
+
+<!-- V38 -->
+<section>
+  <h1 class="title">Shearing Matrix</h1>
+  <img class="abs" src="./assets/shear-CaarkHur.svg" alt="Shearing the skewed pyramid into a symmetric one" style="left:510px; top:210px; width:900px; height:396px">
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;\frac{r+l}{2n}&amp;0\\0&amp;1&amp;\frac{t+b}{2n}&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r+l}{2}\\\frac{t+b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}0\\0\\-n\\1\end{bmatrix}" style="left:0; width:1920px; top:680px; text-align:center"></div>
+  <aside class="notes">
+What is the appropriate shearing transform? Consider the line through the center of the skewed pyramid. It goes from the origin to the point ((r+l)/2, (t+b)/2, -n)
+After shearing we’d like this vector to lie on the negative z-axis, transforming the point above onto (0, 0, -n). It is easy to see that this can be accomplished by the above matrix.
+  </aside>
+</section>
+
+<!-- V39 -->
+<section>
+  <h1 class="title">Scaling Matrix</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Scale the symmetric pyramid to create a 45 degree angle between each plane and the Z-axis:</li>
+  </ul>
+  <img class="abs" src="./assets/scale-867zURTP.svg" alt="Scaling the symmetric pyramid to a 45 degree one" style="left:510px; top:520px; width:900px; height:460px">
+  <aside class="notes">
+Now that the pyramid is symmetric around the origin, let’s find a scaling matrix that would make 45 degree angles between its planes and the negative z-axis. We can achieve this goal by scaling the near window, such that both its width and its height become 2n. It is easy to see that this can be accomplished by the above matrix.
+  </aside>
+</section>
+
+<!-- V40 -->
+<section>
+  <h1 class="title">Scaling Matrix</h1>
+  <img class="abs" src="./assets/scale-867zURTP.svg" alt="Scaling the symmetric pyramid to a 45 degree one" style="left:610px; top:200px; width:700px; height:358px">
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac{2n}{t-b}&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r-l}{2}\\\frac{t-b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}n\\n\\-n\\1\end{bmatrix}" style="left:0; width:1920px; top:620px; text-align:center"></div>
+  <aside class="notes">
+Now that the pyramid is symmetric around the origin, let’s find a scaling matrix that would make 45 degree angles between its planes and the negative z-axis. We can achieve this goal by scaling the near window, such that both its width and its height become 2n. It is easy to see that this can be accomplished by the above matrix.
+  </aside>
+</section>
+
+<!-- V41 -->
+<section>
+  <h1 class="title">Derivation, part II (perspective)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Assuming the center of projection at (0,0,0) and the projection plane is at <span class="mr"><i>z</i> = −1</span>, we have (from similar triangles):</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="x_{\mathit{out}}=x_{\mathit{eye}}/-z_{\mathit{eye}}\qquad y_{\mathit{out}}=y_{\mathit{eye}}/-z_{\mathit{eye}}" style="left:0; width:1920px; top:420px; text-align:center"></div>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;A&amp;B\\0&amp;0&amp;-1&amp;0\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x\\y\\Az+B\\-z\end{bmatrix}" style="left:0; width:1920px; top:600px; text-align:center"></div>
+  <aside class="notes">
+We want to find a perspective transformation in the homogeneous space that would preserve depth relationships (we’ll need depth information both for clipping and for hidden line/surface removal) as well as transform planes into planes.
+
+Assuming that the center of projection is at the origin, and the projection plane is z = -1, we have the following (from similar triangles):
+xs/-1 = xe/ze, thus    xs = xe/-ze
+ys/-1 = ye/ze, thus    ys = ye/-ze
+This implies the matrix on the slide. After normalization we will get the expressions we want for x and y.
+Other matrices might have done the job as well, but this one retains the z values, mapping them monotonically to the interval [-1,1].
+  </aside>
+</section>
+
+<!-- V42 -->
+<section>
+  <h1 class="title">Derivation, part II (perspective)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>The canonical pyramid is then transformed into a cube, using a perspective transformation:</li>
+  </ul>
+  <img class="abs" src="./assets/to_cube-a1G-s_2c.svg" alt="The canonical pyramid between -n and -f becomes the cube between -1 and 1" style="left:60px; top:380px; width:820px; height:430px">
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;A&amp;B\\0&amp;0&amp;-1&amp;0\end{bmatrix}" style="left:950px; top:380px"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="-1=\frac{-An+B}{n}\qquad 1=\frac{-Af+B}{f}" style="left:950px; top:690px"></div>
+  <div class="abs eq" data-scale="5" data-tex="A=-\frac{f+n}{f-n}\qquad B=\frac{-2fn}{f-n}" style="left:950px; top:860px"></div>
+  <aside class="notes">
+Thus, zs = -(Aze + B)/ze
+We have two unknowns, so all we need is two equations. We want the plane ze = -n to map onto the plane zs = -1. Similarly, ze = -f maps onto zs = 1.
+
+-1 = (-An + B)/n  ==&gt;  -n = B - An  ==&gt; B = An - n
+  1 = (-Af + B)/f   ==&gt;     f = B - Af
+
+f = An - n - Af    ==&gt;  f + n = A(n - f)   ==&gt;   A = (f+n)/(n-f)
+B =  An - n = n(f+n)/(n-f) - n = fn/(n-f) + n^2/(n-f) - n(n-f)/(n-f)
+B = 2fn/(n-f)
+  </aside>
+</section>
+
+<!-- V43 -->
+<section>
+  <h1 class="title">Finally...</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Multiplying these three transformations gives us the desired matrix:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;-\frac{f+n}{f-n}&amp;\frac{-2fn}{f-n}\\0&amp;0&amp;-1&amp;0\end{bmatrix}\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac{2n}{t-b}&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}1&amp;0&amp;\frac{r+l}{2n}&amp;0\\0&amp;1&amp;\frac{t+b}{2n}&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}" style="left:0; width:1920px; top:380px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="=\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;\frac{r+l}{r-l}&amp;0\\0&amp;\frac{2n}{t-b}&amp;\frac{t+b}{t-b}&amp;0\\0&amp;0&amp;-\frac{f+n}{f-n}&amp;\frac{-2fn}{f-n}\\0&amp;0&amp;-1&amp;0\end{bmatrix}" style="left:0; width:1920px; top:690px; text-align:center"></div>
+</section>
+
+<!-- V44 -->
+<section>
+  <h1 class="title">Non-linear (but monotonic) mapping of Z values</h1>
+  <div class="demo" data-demo="zmap" data-plot="120,215,1150,820"></div>
+  <div class="abs demo" style="left:1320px; top:300px; width:540px" data-prevent-swipe>
+    <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px"><span class="lab lab-n"></span><input type="range" name="n" min="-1" max="0.7" step="0.01"></div>
+    <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px; margin-top:40px"><span class="lab lab-f"></span><input type="range" name="f" min="0.3" max="3" step="0.01"></div>
+  </div>
+  <div class="abs zmap-half" style="left:1320px; top:640px; width:540px; font-size:40px; line-height:1.2"></div>
+  <div class="abs zmap-res" style="left:1320px; top:800px; width:540px; font-size:40px; line-height:1.2"></div>
+  <aside class="notes">
+This plot shows the values of Z after the perspective transformation (for near = 1 and far = 10 by default; the sliders change them, on a logarithmic scale). The Z values in the interval [-1,-10] are mapped in a non-linear, but monotonic, fashion to the range [-1,1]. We will also see that this mapping preserves lines and planes. This property along with the monotonicity allows us to subsequently use the Z values for depth comparisons which we need to make in order to perform hidden surface removal later on.
+
+New: the near plane matters more than the far one. z_ndc = (f+n)/(f−n) − 2fn/((f−n)d), so half of the [−1, 1] range is used up by d = 2nf/(f+n), which is about 2n when f ≫ n: the precision is spent close to the eye. Try n = 0.1, f = 1000: half of the range is gone by d ≈ 0.2. The resolution of a 24-bit depth buffer at distance d is about 2⁻²⁴ (f−n) d²/(fn): at the far plane, 2⁻²⁴ (f−n) f/n, which grows like f/n. Pushing the far plane out costs little; pulling the near plane in costs a lot. Far-away surfaces whose depths fall into the same bucket flicker (z-fighting), back in week 7.
+  </aside>
+</section>
+
+<!-- V46 -->
+<section>
+  <h1 class="title">View Frustum Clipping</h1>
+  <img class="abs" src="./assets/clip-BgjROhEK.svg" alt="A triangle clipped by the view frustum, and in the normalized view volume" style="left:110px; top:220px; width:1700px; height:631px">
+  <ul class="abs bullets" style="left:250px; top:890px; width:1450px">
+    <li>After applying the projection and normalizing, all of the coordinates lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
+  </ul>
+  <aside class="notes">
+The coordinates of any point after the perspective divide must lie inside the [-1,1] cube. Thus, in homogeneous coordinates it must hold that x/w &lt; 1 and also x/w &gt; -1, and so forth for the y and z coordinates.
+Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get x &lt; w, x &gt; -w, and so forth.
+
+Clipping in homogeneous coordinates has two main advantages:
+We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
+The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+
+(Redrawn: a triangle partly outside the frustum, its clipped part, and the clipped part in normalized coordinates.)
+  </aside>
+</section>
+
+<!-- V47 -->
+<section>
+  <h1 class="title">View Frustum Clipping</h1>
+  <ul class="abs bullets" style="left:250px; top:240px; width:1450px">
+    <li>After applying the projection and normalizing, all of the coordinates lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
+    <li>View frustum clipping may be done by checking each coordinate against the interval <span class="mr">[−1,1]</span></li>
+    <li><b>Problem</b>: points <i>behind</i> the camera can also be mapped to the canonical view cube.</li>
+    <li><b>Solution</b>: perform clipping <i>before</i> the perspective division.</li>
+  </ul>
+  <aside class="notes">
+The coordinates of any point after the perspective divide must lie inside the [-1,1] cube. Thus, in homogeneous coordinates it must hold that x/w &lt; 1 and also x/w &gt; -1, and so forth for the y and z coordinates.
+Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get x &lt; w, x &gt; -w, and so forth.
+
+Clipping in homogeneous coordinates has two main advantages:
+We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
+The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+  </aside>
+</section>
+
+<!-- V48 -->
+<section>
+  <h1 class="title">View Frustum Clipping</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>In homogeneous coordinates all points inside the view frustum satisfy all of the following inequalities:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="w&gt;0\quad\text{and}\quad\left\{\begin{matrix}x&lt;w&amp;x&gt;-w\\y&lt;w&amp;y&gt;-w\\z&lt;w&amp;z&gt;-w\end{matrix}\right\}" style="left:0; width:1920px; top:380px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:640px; width:1450px">
+    <li>Lines must be clipped against the planes:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\left\{\begin{matrix}x=w&amp;x=-w\\y=w&amp;y=-w\\z=w&amp;z=-w\end{matrix}\right\}" style="left:0; width:1920px; top:740px; text-align:center"></div>
+  <aside class="notes">
+The coordinates of any point after the perspective divide must lie inside the [-1,1] cube. Thus, in homogeneous coordinates it must hold that -1 &lt; x/w &lt; 1, and so forth for the y and z coordinates.
+Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get -w &lt; x &lt; w, and so forth.
+
+Clipping in homogeneous coordinates has two main advantages:
+We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
+The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+  </aside>
+</section>
+
+<!-- V49 -->
+<section>
+  <h1 class="title">Viewport Transformation (in OpenGL)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Defines a pixel rectangle in the window into which the final image is mapped:</li>
+  </ul>
+  <pre class="abs code" style="left:330px; top:390px">glViewport(x, y, width, height)</pre>
+  <ul class="abs bullets" style="left:250px; top:480px; width:1450px">
+    <li><span class="mr">(<i>x</i>, <i>y</i>)</span> specify the lower left corner of the viewport:</li>
+  </ul>
+  <img class="abs" src="./assets/viewport-BKGQQvJf.svg" alt="The window, and the viewport rectangle at (x, y) with its width and height" style="left:610px; top:570px; width:700px; height:470px">
+  <img class="abs" src="./assets/warp_backward-Dzx9v3Rd.png" alt="" style="left:851px; top:701px; width:298px; height:228px; object-fit:cover">
+  <aside class="notes">
+By default, the initial viewport fills the entire window:
+(0, 0, winWidth, winHeight)
+
+Note: it is the responsibility of the programmer to make sure that the viewport’s aspect ratio is the same as that of the view volume, or handle the case where the aspect ratios do not correspond, if distortion is to be avoided.
+  </aside>
+</section>
+
+<!-- V50 -->
+<section>
+  <h1 class="title">Viewport Transformation (<span class="mr"><i>x,y</i></span>)</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
+    <li>Transforms normalized device (nd) coordinates to window (w) coordinates.</li>
+    <li>nd coordinates range in <span class="mr">[−1,1], [−1,1]</span></li>
+    <li>window coordinates range in <span class="mr">[<i>x, x</i>+<i>width</i>], [<i>y, y</i>+<i>height</i>]</span></li>
+    <li>The resulting transformation is:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="x_w=(x_{nd}+1)\left(\frac{\mathit{width}}{2}\right)+x" style="left:700px; top:640px"></div>
+  <div class="abs eq" data-scale="5" data-tex="y_w=(y_{nd}+1)\left(\frac{\mathit{height}}{2}\right)+y" style="left:700px; top:780px"></div>
+  <ul class="abs bullets" style="left:250px; top:940px; width:1450px">
+    <li>Done by graphics API (and not in your program)</li>
+  </ul>
+  <aside class="notes">
+How do we arrive at the transformation?
+Ok, first we shift the ndc’s such that the lower left corner is at the origin. This, of course, is done by translating by 1.
+Now the ndc’s occupy a 2x2 square. To make the width and height right we scale each coordinate appropriately.
+Finally, we translate to the lower left corner of the viewport.
+Writing this in matrix notation is left as an exercise.
+  </aside>
+</section>
+
+<!-- V51 -->
+<section>
+  <h1 class="title">Viewport Transformation (<span class="mr"><i>z</i></span>)</h1>
+  <ul class="abs bullets" style="left:250px; top:450px; width:1450px">
+    <li>Transforms normalized device (nd) <b>depth</b> coordinates from <span class="mr">[−1,1]</span> into <span class="mr">[0,1]</span>.</li>
+    <li>Done by the graphics API (and not in your program)</li>
+  </ul>
+</section>
+
+<!-- V52 -->
+<section>
+  <h1 class="title">Summary: Coordinate Systems</h1>
+  <img class="abs" src="./assets/coords_flow-CgCvIJZL.svg" alt="Coordinate systems and the transformations between them" style="left:530px; top:215px; width:860px; height:815px">
+  <aside class="notes">
+Positioning the objects and placing and pointing the camera is composited into a single transformation matrix that transforms object coordinates into eye coordinates (sometimes referred to as modelview)
+The projection matrix transforms eye coordinates into coordinates in the canonical or normalized view volume, where they can be clipped efficiently.
+The clipped coordinates can now be projected onto the projection plane, yielding normalized device coordinates. Note, however, that we still keep the z coordinate around, in order to facilitate hidden line and hidden surface removal when scan-converting.
+The viewport transformation takes the normalized device coordinates, which are typically in the range [-1,1] in x and y. and transforms them to window coordinates, e.g., [0.0, 640.0] and [0.0, 480.0]. The z coordinate is transformed to the [0,1] range for hidden surface removal purposes.
+  </aside>
+</section>
+
+<!-- new: the camera matrix -->
+<section>
+  <h1 class="title">The Camera Matrix</h1>
+  <ul class="abs bullets" style="left:150px; top:215px; width:1650px">
+    <li>Viewport <span class="mr">×</span> projection (symmetric frustum), applied to eye coordinates:</li>
+  </ul>
+  <div class="abs eq" data-scale="3.8" data-tex="\begin{bmatrix}x\\y\\z\\w\end{bmatrix}=\begin{bmatrix}\tfrac{W}{2}\cot\tfrac{\theta_x}{2}&amp;0&amp;-\tfrac{W}{2}&amp;0\\0&amp;\tfrac{H}{2}\cot\tfrac{\theta_y}{2}&amp;-\tfrac{H}{2}&amp;0\\\textcolor{#A6A6A6}{0}&amp;\textcolor{#A6A6A6}{0}&amp;\textcolor{#A6A6A6}{\ast}&amp;\textcolor{#A6A6A6}{\ast}\\0&amp;0&amp;-1&amp;0\end{bmatrix}\begin{bmatrix}x_e\\y_e\\z_e\\1\end{bmatrix}" style="left:0; width:1920px; top:280px; text-align:center"></div>
+  <ul class="abs bullets fragment" data-fragment-index="1" style="left:150px; top:500px; width:1650px">
+    <li>Drop the depth row (kept for the z-buffer); look down <span class="mr">+<i>z</i></span>: <span class="mr"><i>Z<sub>c</sub></i> = −<i>z<sub>e</sub></i></span></li>
+  </ul>
+  <div class="abs eq fragment" data-fragment-index="1" data-scale="3.8" data-tex="\begin{bmatrix}x\\y\\w\end{bmatrix}=\underbrace{\begin{bmatrix}f_x&amp;0&amp;c_x\\0&amp;f_y&amp;c_y\\0&amp;0&amp;1\end{bmatrix}}_{K\text{ (intrinsics)}}\begin{bmatrix}X_c\\Y_c\\Z_c\end{bmatrix},\qquad f_x=\tfrac{W}{2}\cot\tfrac{\theta_x}{2},\quad c_x=\tfrac{W}{2}" style="left:0; width:1920px; top:570px; text-align:center"></div>
+  <ul class="abs bullets fragment" data-fragment-index="2" style="left:150px; top:800px; width:1650px">
+    <li>The view matrix gives the camera coordinates:</li>
+  </ul>
+  <div class="abs eq fragment" data-fragment-index="2" data-scale="3.8" data-tex="\begin{bmatrix}X_c\\Y_c\\Z_c\end{bmatrix}=\underbrace{[\,R\mid t\,]}_{\text{extrinsics}}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\qquad\Longrightarrow\qquad P=K\,[\,R\mid t\,]\quad(3\times4)" style="left:0; width:1920px; top:865px; text-align:center"></div>
+  <aside class="notes">
+New: the two vocabularies, graphics and computer vision, describe the same camera. P = K[R|t] is the graphics chain with the depth row discarded.
+
+Multiply the viewport transformation by the perspective projection matrix of a symmetric frustum (2n/(r−l) = cot(θx/2)), and apply it to eye coordinates: the x, y and w rows are what the camera matrix of computer vision keeps; the z row (gray) only matters for the z-buffer. Flip z so that the camera looks down +z (Z_c = −z_e): the 3 × 3 matrix that remains is K, the intrinsic matrix: focal lengths in pixels f_x, f_y and the principal point (c_x, c_y), the image center for a symmetric frustum (off center for a skewed one; a fifth entry, skew, is zero for real sensors). The view matrix, the extrinsics, supplies the camera coordinates: [R | t], with t = −Re. Together P = K[R | t], a 3 × 4 matrix, 11 degrees of freedom (5 intrinsic + 6 extrinsic), defined up to scale.
+
+Build: click twice.
+
+Conventions differ (graphics: camera looks down −z, image y up; vision: +z, y down): sign flips of rows, deferred to the recitation (R3). Where this goes: calibration (next), and in week 12 we recover such a camera from a photograph to insert a synthetic object into it.
+  </aside>
+</section>
+
+<!-- new: calibration -->
+<section>
+  <h1 class="title">Camera Calibration</h1>
+  <ul class="abs bullets" style="left:150px; top:225px; width:1650px">
+    <li>Known 3D points <span class="mr"><i>X<sub>i</sub></i></span>, their images <span class="mr">(<i>x<sub>i</sub></i>, <i>y<sub>i</sub></i>)</span>; <span class="mr"><i>n</i> ≥ 6</span>, not all coplanar:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="\lambda_i\begin{bmatrix}x_i\\y_i\\1\end{bmatrix}=P\begin{bmatrix}X_i\\1\end{bmatrix},\qquad P=\begin{bmatrix}p_1^{\mathsf T}\\p_2^{\mathsf T}\\p_3^{\mathsf T}\end{bmatrix}" style="left:0; width:1920px; top:330px; text-align:center"></div>
+  <ul class="abs bullets" style="left:150px; top:540px; width:1650px">
+    <li>Eliminate <span class="mr"><i>λ<sub>i</sub></i></span>: two linear equations per point in the 12 entries of <span class="mr"><i>P</i></span></li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="\begin{bmatrix}\tilde X_i^{\mathsf T}&amp;0^{\mathsf T}&amp;-x_i\tilde X_i^{\mathsf T}\\0^{\mathsf T}&amp;\tilde X_i^{\mathsf T}&amp;-y_i\tilde X_i^{\mathsf T}\end{bmatrix}\begin{bmatrix}p_1\\p_2\\p_3\end{bmatrix}=0,\qquad\tilde X_i=\begin{bmatrix}X_i\\1\end{bmatrix}" style="left:0; width:1920px; top:615px; text-align:center"></div>
+  <ul class="abs bullets" style="left:150px; top:820px; width:1650px">
+    <li>Stack: <span class="mr"><i>Ap</i> = 0</span>; <span class="mr"><i>p</i></span> = the right singular vector of <span class="mr"><i>A</i></span> with the smallest singular value (the DLT of week 2, with 12 unknowns instead of 9)</li>
+    <li>Split <span class="mr"><i>P</i> = <i>K</i>[<i>R</i> | <i>t</i>]</span>: RQ decomposition of its left <span class="mr">3 × 3</span> block</li>
+  </ul>
+  <aside class="notes">
+New. Calibration inverts the camera matrix: from known 3D points (a calibration object) and where they appear in the image, recover P, then K, R and t. Each correspondence gives λ (x, y, 1) = P X̃; eliminating λ (λ = p3ᵀX̃) leaves two equations linear in the entries of P: p1ᵀX̃ − x p3ᵀX̃ = 0 and p2ᵀX̃ − y p3ᵀX̃ = 0. P has 11 degrees of freedom, so 6 points are needed (5½), and they must not all lie on one plane (then P is not determined: a plane only gives a homography). With more points, least squares: the right singular vector of A with the smallest singular value, exactly as for the homography in week 2 (normalize the points first, as there).
+
+Then split P: its left 3 × 3 block is KR, an upper triangular matrix times a rotation: the RQ decomposition (Gram–Schmidt from the last row up), stated, not derived. Then t = K⁻¹ times P's last column.
+
+Optional: real lenses also distort (radially); practical calibration (Zhang's method, OpenCV's calibrateCamera) uses several views of a flat checkerboard and refines everything, distortion included, by nonlinear least squares, starting from linear estimates like this one.
+  </aside>
+</section>
+
+<!-- new: calibration demo -->
+<section>
+  <h1 class="title">Calibration: an Example</h1>
+  <div class="demo" data-demo="calib" data-image="40,215" data-world="700,200,660,560" data-unit="62" data-waz="-80"></div>
+  <div class="abs caption gray" style="left:40px; width:640px; top:705px; font-size:32px">the image: measured (+), reprojected (○)</div>
+  <div class="abs caption gray" style="left:700px; width:660px; top:765px; font-size:32px">true camera (black), estimate (blue)</div>
+  <div class="abs eq calib-ktrue" style="left:1390px; width:500px; top:240px; text-align:center"></div>
+  <div class="abs eq calib-kest" style="left:1390px; width:500px; top:470px; text-align:center"></div>
+  <div class="abs calib-err" style="left:1390px; width:500px; top:700px; font-size:36px; line-height:1.3; text-align:center"></div>
+  <div class="abs demo" style="left:120px; top:860px; width:1680px; display:grid; grid-template-columns:1fr 1fr; column-gap:120px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-sigma" style="width:360px"></span><input type="range" name="sigma" min="0" max="5" step="0.1"></div>
+    <div class="slider-row hom-slider"><span class="lab lab-n" style="width:330px"></span><input type="range" name="n" min="6" max="50" step="1"></div>
+  </div>
+  <aside class="notes">
+New, computed live. A camera (K on the right, top) photographs a calibration object: two checkerboards at a right angle, 50 known corners. The measured image points are the true projections plus Gaussian noise of σ pixels (the + marks; gray ones are not used). The DLT of the previous slide, with Hartley normalization, estimates P from the points used; the RQ decomposition splits it into K̂, R and t. The blue circles are the estimate's reprojections of the points used, and the blue camera in the middle is where the estimate puts the camera.
+
+Demo: with σ = 0 the estimate is exact, from as few as 6 points. Raise the noise: with few points the estimate wanders (focal length, principal point, camera position); more points average the noise out. Drag the middle view to turn it.
+
+Note that the reprojection error can be small even when K̂ is off: focal length and distance trade off against each other (a closer, wider camera sees nearly the same image); the second plane is what pins them down.
+  </aside>
+</section>
+
+<!-- V53 -->
+<section>
+  <h1 class="title">3D Viewing Pipeline</h1>
+  <img class="abs" src="./assets/pipeline_shaders-B0u50IZi.svg" alt="The 3D viewing pipeline, and where each stage runs" style="left:60px; top:240px; width:1800px; height:660px">
+</section>
+
+<!-- V54 -->
+<section>
+  <h1 class="title">The Complete Rendering Pipeline</h1>
+  <img class="abs" src="./assets/render_pipeline-xNc7H8TZ.svg" alt="The rendering pipeline and the coordinate transform pipeline" style="left:80px; top:250px; width:1760px; height:620px">
+</section>
+
+</div>
+</div>
+</body>
+</html>
