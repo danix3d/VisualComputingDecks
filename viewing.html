@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>3D Transformations and Viewing</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/viewing-BrPC7JII.js"></script>
+  <script type="module" crossorigin src="./assets/viewing-BWCfQ7kQ.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/view3d-DkND2-b0.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-DST-scrg.css">
 </head>
@@ -41,6 +41,39 @@ In the left-handed coordinate system the direction is reversed.
 Another common rule is the “thumb rule”: imagine that your thumb is the positive z-axis. Your fingers curl from the positive x-axis towards the positive y-axis.
 
 Right-handed coordinate system is used to define transformations, since this is the standard mathematical convention. However, beware that not all graphics texts use a right-handed system. In particular, camera centered coordinate systems are often left-handed, because it is convenient to think of the z (depth) axis as pointing away from the viewer, such that more distant objects have greater depth (z) values.
+  </aside>
+</section>
+
+<!-- new: dot and cross products -->
+<section>
+  <h1 class="title">Dot and Cross Products</h1>
+  <div class="demo" data-demo="products" data-left="20" data-top="190" data-w="980" data-h="690"
+       data-ox="400" data-oy="560" data-unit="165" data-az="-35" data-el="24"></div>
+  <div class="abs demo" style="left:60px; top:885px; width:900px; display:flex; align-items:center; gap:40px" data-prevent-swipe>
+    <div class="slider-row hom-slider" style="flex:1; margin:0"><span class="lab lab-theta" style="width:180px"></span><input type="range" name="theta" min="0" max="180" step="1"></div>
+    <div class="choices" data-prevent-swipe><button data-value="uv"><span class="mr"><b>u</b> × <b>v</b></span></button><button data-value="vu"><span class="mr"><b>v</b> × <b>u</b></span></button></div>
+  </div>
+  <div class="abs caption prod-readout" style="left:20px; width:980px; top:975px; font-size:38px"></div>
+  <ul class="abs bullets" style="left:1040px; top:225px; width:850px">
+    <li>Dot product: projection</li>
+  </ul>
+  <div class="abs eq" data-scale="4" data-tex="\mathbf u\cdot\mathbf v=\|\mathbf u\|\,\|\mathbf v\|\cos\theta" style="left:1040px; width:850px; top:295px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1040px; top:385px; width:850px">
+    <li>Cross product (3D): perpendicular to both, right-hand rule</li>
+  </ul>
+  <div class="abs eq" data-scale="4" data-tex="\|\mathbf u\times\mathbf v\|=\|\mathbf u\|\,\|\mathbf v\|\sin\theta=\text{area}" style="left:1040px; width:850px; top:525px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.6" data-tex="\mathbf u\times\mathbf v=\begin{bmatrix}u_yv_z-u_zv_y\\u_zv_x-u_xv_z\\u_xv_y-u_yv_x\end{bmatrix}=\underbrace{\begin{bmatrix}0&amp;-u_z&amp;u_y\\u_z&amp;0&amp;-u_x\\-u_y&amp;u_x&amp;0\end{bmatrix}}_{[\mathbf u]_\times}\mathbf v" style="left:1040px; width:850px; top:625px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1040px; top:860px; width:850px">
+    <li><span class="mr"><b>v</b> × <b>u</b> = −<b>u</b> × <b>v</b></span>; zero when parallel</li>
+  </ul>
+  <aside class="notes">
+New, needed for Rodrigues' formula and for positioning the camera. The dot product measures how much of v lies along u: ‖u‖‖v‖cos θ; with u a unit vector it is the signed length of v's projection onto u (week 2). It is zero exactly when the vectors are perpendicular.
+
+The cross product exists only in 3D. u × v is perpendicular to both u and v; its direction follows the right-hand rule (fingers from u to v, the thumb gives u × v; in a right-handed coordinate system, x × y = z), and its length is ‖u‖‖v‖sin θ, the area of the parallelogram they span. So it vanishes when u and v are parallel, and swapping them flips it: v × u = −u × v. Written as a matrix, u × v = [u]× v, with [u]× skew-symmetric.
+
+Demo: the θ slider opens the angle; watch the projection (blue band) shrink and turn negative past 90°, and the cross product grow to its maximum at 90° (the parallelogram is then a rectangle) and shrink back to zero at 180°. The buttons swap the order. Drag the view to turn it (double-click resets).
+
+Two uses coming up: in Rodrigues' formula, for a unit axis k, k × v is v⊥ turned by 90° about k (same length), and (k·v)k is v's projection onto the axis; in positioning the camera, cross products build the camera's perpendicular axes. And the normal of a triangle is the cross product of two of its edges.
   </aside>
 </section>
 
@@ -134,7 +167,7 @@ Note that when rotating about y, we must reverse the signs on the sines, in orde
 <!-- T40 -->
 <section>
   <h1 class="title">Rotation About an Arbitrary Axis</h1>
-  <ul class="abs bullets" style="left:300px; top:250px; width:1400px">
+  <ul class="abs bullets" style="left:300px; top:225px; width:1400px">
     <li>The idea: make the arbitrary axis coincident with one of the coordinate axes, rotate, and then transform back:</li>
     <li class="sub">Translate rotation axis to pass through the origin;</li>
     <li class="sub">Rotate about the X axis into the XZ plane;</li>
@@ -143,14 +176,9 @@ Note that when rotating about y, we must reverse the signs on the sines, in orde
     <li class="sub">Apply inverse rotations about the Y and X axes;</li>
     <li class="sub">Apply inverse translation.</li>
   </ul>
-</section>
-
-<!-- T41 -->
-<section>
-  <h1 class="title">Rotation About an Arbitrary Axis</h1>
-  <div class="abs caption" style="left:72px; width:1776px; top:480px; font-size:48px">Video: <a href="https://www.youtube.com/watch?v=75o5pmeXUMo" target="_blank" rel="noopener">3D rotation about an arbitrary axis</a> (YouTube)</div>
+  <div class="abs caption" style="left:72px; width:1776px; top:960px; font-size:44px">Video: <a href="https://www.youtube.com/watch?v=75o5pmeXUMo" target="_blank" rel="noopener">3D rotation about an arbitrary axis</a> (YouTube)</div>
   <aside class="notes">
-(The original slide embedded this video; it is linked here instead. A live, stepped demo may replace it.)
+The video (linked at the bottom) animates these steps. (It was embedded on a separate slide in the original deck.)
   </aside>
 </section>
 
@@ -163,18 +191,18 @@ Note that when rotating about y, we must reverse the signs on the sines, in orde
     <div class="slider-row hom-slider"><span class="lab lab-theta" style="width:190px"></span><input type="range" name="theta" min="0" max="360" step="1"></div>
   </div>
   <ul class="abs bullets" style="left:1060px; top:230px; width:830px">
-    <li>Rotation by <span class="mr"><i>θ</i></span> about the unit axis <span class="mr"><i>k</i></span>: split <span class="mr"><i>v</i></span> along the axis</li>
+    <li>Rotation by <span class="mr"><i>θ</i></span> about the unit axis <span class="mr"><b>k</b></span>: split <span class="mr"><b>v</b></span> along the axis</li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="v_\parallel=(k\cdot v)\,k,\qquad v_\perp=v-v_\parallel" style="left:1060px; width:830px; top:380px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="\mathbf v_\parallel=(\mathbf k\cdot\mathbf v)\,\mathbf k,\qquad\mathbf v_\perp=\mathbf v-\mathbf v_\parallel" style="left:1060px; width:830px; top:380px; text-align:center"></div>
   <ul class="abs bullets" style="left:1060px; top:470px; width:830px">
-    <li><span class="mr"><i>v</i><sub>∥</sub></span> stays; <span class="mr"><i>v</i><sub>⊥</sub></span> turns by <span class="mr"><i>θ</i></span> toward <span class="mr"><i>k</i> × <i>v</i></span>:</li>
+    <li><span class="mr"><b>v</b><sub>∥</sub></span> stays; <span class="mr"><b>v</b><sub>⊥</sub></span> turns by <span class="mr"><i>θ</i></span> toward <span class="mr"><b>k</b> × <b>v</b></span>:</li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="Rv=v_\parallel+\cos\theta\,v_\perp+\sin\theta\,(k\times v)" style="left:1060px; width:830px; top:555px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="R\mathbf v=\mathbf v_\parallel+\cos\theta\,\mathbf v_\perp+\sin\theta\,(\mathbf k\times\mathbf v)" style="left:1060px; width:830px; top:555px; text-align:center"></div>
   <ul class="abs bullets" style="left:1060px; top:660px; width:830px">
     <li>As a matrix:</li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="R=\cos\theta\,I+\sin\theta\,[k]_\times+(1-\cos\theta)\,kk^{\mathsf T}" style="left:1060px; width:830px; top:740px; text-align:center"></div>
-  <div class="abs eq" data-scale="3.6" data-tex="[k]_\times=\begin{bmatrix}0&amp;-k_z&amp;k_y\\k_z&amp;0&amp;-k_x\\-k_y&amp;k_x&amp;0\end{bmatrix}" style="left:1060px; width:830px; top:840px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="R=\cos\theta\,I+\sin\theta\,[\mathbf k]_\times+(1-\cos\theta)\,\mathbf k\mathbf k^{\mathsf T}" style="left:1060px; width:830px; top:740px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.6" data-tex="[\mathbf k]_\times=\begin{bmatrix}0&amp;-k_z&amp;k_y\\k_z&amp;0&amp;-k_x\\-k_y&amp;k_x&amp;0\end{bmatrix}" style="left:1060px; width:830px; top:840px; text-align:center"></div>
   <aside class="notes">
 New. The closed form of the five-step composition on the previous slides: rotation by θ about a unit axis k through the origin (for an axis through another point, translate it to the origin first, as before). Stated, not derived; the picture is the derivation. The component of v along the axis, v∥ = (k·v)k, does not move. The rest, v⊥, lies in the plane perpendicular to k and turns in that plane by θ, toward k × v, which is v⊥ turned by 90° (same length). So Rv = v∥ + cos θ v⊥ + sin θ (k × v). Writing k × v as the matrix [k]× applied to v, and v∥ as kkᵀv, gives the matrix form.
 
@@ -192,7 +220,7 @@ Sanity checks: θ = 0 gives I; k = z gives the familiar rotation about z. Axis�
     <li><b>Euler angles</b>: the orientation of an object is specified by rotation angles about the X, Y, Z axes (performed in this order)</li>
     <li>How can we smoothly interpolate between two different orientations?</li>
     <li>Euler angle interpolation is not intuitive!</li>
-    <li>Gimbal Lock may occur…</li>
+    <li>Gimbal Lock may occur… (<a href="https://www.youtube.com/watch?v=zc8b2Jo7mno" target="_blank" rel="noopener">video</a>)</li>
   </ul>
   <aside class="notes">
 The result of any sequence of rotations of a 3D object about a fixed point in space, may be equivalently achieved by a single rotation about a fixed axis that runs through the same point. 
@@ -200,15 +228,8 @@ The result of any sequence of rotations of a 3D object about a fixed point in sp
 Related result: any orientation of a 3D object can be achieved by starting with the object in some canonical pose, and applying 3 rotations, one about each axis (in some predetermined order). This means that any orientation can be represented using 3 angles.
 
 Suppose we have two orientations and we’d like to interpolate between them. Since each orientation is represented using 3 angles, it’s natural to try to interpolate the three angles. However, the results are not always intuitive.
-  </aside>
-</section>
 
-<!-- T43 -->
-<section>
-  <h1 class="title">Euler Angles</h1>
-  <div class="abs caption" style="left:72px; width:1776px; top:480px; font-size:48px">Video: <a href="https://www.youtube.com/watch?v=zc8b2Jo7mno" target="_blank" rel="noopener">gimbal lock</a> (YouTube)</div>
-  <aside class="notes">
-(The original slide showed this video and a gimbal-lock animation; a live gimbal demo may replace them.)
+The gimbal lock video is linked from the last bullet (it was on a separate slide in the original deck).
   </aside>
 </section>
 
@@ -218,7 +239,7 @@ Suppose we have two orientations and we’d like to interpolate between them. Si
   <ul class="abs bullets" style="left:170px; top:260px; width:1150px">
     <li>Rotations may be represented by unit quaternions:</li>
   </ul>
-  <div class="abs eq" data-scale="5" data-tex="q=a+b\mathbf{i}+c\mathbf{j}+d\mathbf{k}" style="left:1340px; top:248px"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf q=a+b\mathbf{i}+c\mathbf{j}+d\mathbf{k}" style="left:1340px; top:248px"></div>
   <ul class="abs bullets" style="left:170px; top:400px; width:1150px">
     <li><span class="mr"><i>a, b, c, d</i></span> are real numbers,</li>
   </ul>
@@ -228,7 +249,7 @@ Suppose we have two orientations and we’d like to interpolate between them. Si
   <ul class="abs bullets" style="left:250px; top:780px; width:1500px">
     <li>Rotation by angle <span class="mr"><i>ϕ</i></span> about the unit vector <span class="mr">[<i>b, c, d</i>]</span> corresponds to the quaternion:</li>
   </ul>
-  <div class="abs eq" data-scale="5" data-tex="q=\cos\frac{\phi}{2}+\sin\frac{\phi}{2}\,(b\mathbf{i}+c\mathbf{j}+d\mathbf{k})" style="left:0; width:1920px; top:870px; text-align:center"></div>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf q=\cos\frac{\phi}{2}+\sin\frac{\phi}{2}\,(b\mathbf{i}+c\mathbf{j}+d\mathbf{k})" style="left:0; width:1920px; top:870px; text-align:center"></div>
   <aside class="notes">
 Another way to represent rotations that does not suffer from the same issues as Euler angles is by using quaternions.
 You can think of a quaternion as an extension of complex numbers, which instead of having just one imaginary coordinate have three such coordinates (in addition to a single real coordinate). So instead of the complex plane, we have the complex 4D space. 
@@ -321,19 +342,19 @@ It follows that a pure rotation is the same for normal vectors: Since the invers
 <!-- new: changing frames -->
 <section>
   <h1 class="title">Changing Coordinate Frames</h1>
-  <img class="abs" src="./assets/frames-Bf1GuYgI.svg" alt="The world frame and a second frame with origin o and axes u, v, w; a point p" style="left:40px; top:250px; width:900px; height:620px">
+  <img class="abs" src="./assets/frames-DgY35Eat.svg" alt="The world frame and a second frame with origin o and axes u, v, w; a point p" style="left:40px; top:250px; width:900px; height:620px">
   <ul class="abs bullets" style="left:990px; top:240px; width:900px">
-    <li>A frame: an origin <span class="mr"><i>o</i></span> and orthonormal axes <span class="mr"><i>u</i>, <i>v</i>, <i>w</i></span></li>
+    <li>A frame: an origin <span class="mr"><b>o</b></span> and orthonormal axes <span class="mr"><b>u</b>, <b>v</b>, <b>w</b></span></li>
   </ul>
-  <div class="abs eq" data-scale="4.5" data-tex="p=o+a\,u+b\,v+c\,w" style="left:990px; width:900px; top:385px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.5" data-tex="\mathbf p=\mathbf o+a\,\mathbf u+b\,\mathbf v+c\,\mathbf w" style="left:990px; width:900px; top:385px; text-align:center"></div>
   <ul class="abs bullets" style="left:990px; top:480px; width:900px">
     <li>Frame to world:</li>
   </ul>
-  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}p\\1\end{bmatrix}=\begin{bmatrix}u&amp;v&amp;w&amp;o\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}" style="left:990px; width:900px; top:555px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}\mathbf p\\1\end{bmatrix}=\begin{bmatrix}\mathbf u&amp;\mathbf v&amp;\mathbf w&amp;\mathbf o\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}" style="left:990px; width:900px; top:555px; text-align:center"></div>
   <ul class="abs bullets" style="left:990px; top:720px; width:900px">
-    <li>World to frame, with <span class="mr"><i>R</i> = [<i>u v w</i>]</span>:</li>
+    <li>World to frame, with <span class="mr"><i>R</i> = [<b>u v w</b>]</span>:</li>
   </ul>
-  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}o\\0&amp;1\end{bmatrix}\begin{bmatrix}p\\1\end{bmatrix}" style="left:990px; width:900px; top:795px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}a&amp;b&amp;c&amp;1\end{bmatrix}^{\mathsf T}=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}\mathbf o\\0&amp;1\end{bmatrix}\begin{bmatrix}\mathbf p\\1\end{bmatrix}" style="left:990px; width:900px; top:795px; text-align:center"></div>
   <aside class="notes">
 New. Every transformation so far moved points within one coordinate system. The same matrices also change coordinates between frames. A frame is an origin o and three orthonormal axes u, v, w (given in world coordinates). A point with coordinates (a, b, c) in the frame is p = o + a u + b v + c w in the world: the matrix whose columns are u, v, w and o. Going the other way is its inverse; since R = [u v w] is orthonormal, R⁻¹ = Rᵀ, so the inverse is cheap: rotate by Rᵀ after translating by −o, which is the matrix shown.
 
@@ -439,9 +460,9 @@ Conceptual pipeline: Get your objects from their individual coordinate systems i
   <h1 class="title">Positioning the Camera</h1>
   <div class="demo" data-demo="lookat" data-world="20,190,930,620" data-unit="74" data-waz="-30" data-view="1010,200,840,630"></div>
   <div class="abs caption gray" style="left:20px; width:930px; top:815px; font-size:34px">the world (drag to turn it)</div>
-  <div class="abs caption gray" style="left:1010px; width:840px; top:840px; font-size:34px">what the camera sees (drag to move the eye <span class="mr"><i>e</i></span>)</div>
-  <div class="abs eq" data-scale="3.8" data-tex="w=\frac{e-c}{\|e-c\|},\quad u=\frac{\mathrm{up}\times w}{\|\mathrm{up}\times w\|},\quad v=w\times u" style="left:20px; width:930px; top:875px; text-align:center"></div>
-  <div class="abs eq" data-scale="3.8" data-tex="V=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}e\\0&amp;1\end{bmatrix},\quad R=[\,u\;v\;w\,]" style="left:20px; width:930px; top:975px; text-align:center"></div>
+  <div class="abs caption gray" style="left:1010px; width:840px; top:840px; font-size:34px">what the camera sees (drag to move the eye <span class="mr"><b>e</b></span>)</div>
+  <div class="abs eq" data-scale="3.8" data-tex="\mathbf w=\frac{\mathbf e-\mathbf c}{\|\mathbf e-\mathbf c\|},\quad\mathbf u=\frac{\mathbf{up}\times\mathbf w}{\|\mathbf{up}\times\mathbf w\|},\quad\mathbf v=\mathbf w\times\mathbf u" style="left:20px; width:930px; top:875px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="V=\begin{bmatrix}R^{\mathsf T}&amp;-R^{\mathsf T}\mathbf e\\0&amp;1\end{bmatrix},\quad R=[\,\mathbf u\;\mathbf v\;\mathbf w\,]" style="left:20px; width:930px; top:975px; text-align:center"></div>
   <div class="abs eq lookat-matrix" style="left:1010px; width:840px; top:895px; text-align:center"></div>
   <aside class="notes">
 New. The first stage of the pipeline, world to eye coordinates, built from three things the user specifies: the eye position e, a target point c to look at, and an "up" direction (usually the world's y axis). The camera looks down its own −w axis (the OpenGL convention), so w points from the target back to the eye. u = up × w is horizontal (perpendicular to up and to the viewing direction), and v = w × u completes the frame: it is the camera's own "up", the projection of the up vector onto the image plane. The view matrix is the world-to-frame matrix of the previous section, with the camera's frame: V = [Rᵀ, −Rᵀe], R = [u v w]. Its rows are u, v, w, with −u·e, −v·e, −w·e in the last column. This is gluLookAt (glm::lookAt).
@@ -1176,7 +1197,7 @@ The viewport transformation takes the normalized device coordinates, which are t
   <ul class="abs bullets fragment" data-fragment-index="2" style="left:150px; top:800px; width:1650px">
     <li>The view matrix gives the camera coordinates:</li>
   </ul>
-  <div class="abs eq fragment" data-fragment-index="2" data-scale="3.8" data-tex="\begin{bmatrix}X_c\\Y_c\\Z_c\end{bmatrix}=\underbrace{[\,R\mid t\,]}_{\text{extrinsics}}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\qquad\Longrightarrow\qquad P=K\,[\,R\mid t\,]\quad(3\times4)" style="left:0; width:1920px; top:865px; text-align:center"></div>
+  <div class="abs eq fragment" data-fragment-index="2" data-scale="3.8" data-tex="\begin{bmatrix}X_c\\Y_c\\Z_c\end{bmatrix}=\underbrace{[\,R\mid\mathbf t\,]}_{\text{extrinsics}}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\qquad\Longrightarrow\qquad P=K\,[\,R\mid\mathbf t\,]\quad(3\times4)" style="left:0; width:1920px; top:865px; text-align:center"></div>
   <aside class="notes">
 New: the two vocabularies, graphics and computer vision, describe the same camera. P = K[R|t] is the graphics chain with the depth row discarded.
 
@@ -1192,16 +1213,16 @@ Conventions differ (graphics: camera looks down −z, image y up; vision: +z, y 
 <section>
   <h1 class="title">Camera Calibration</h1>
   <ul class="abs bullets" style="left:150px; top:225px; width:1650px">
-    <li>Known 3D points <span class="mr"><i>X<sub>i</sub></i></span>, their images <span class="mr">(<i>x<sub>i</sub></i>, <i>y<sub>i</sub></i>)</span>; <span class="mr"><i>n</i> ≥ 6</span>, not all coplanar:</li>
+    <li>Known 3D points <span class="mr"><b>X</b><sub><i>i</i></sub></span>, their images <span class="mr">(<i>x<sub>i</sub></i>, <i>y<sub>i</sub></i>)</span>; <span class="mr"><i>n</i> ≥ 6</span>, not all coplanar:</li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="\lambda_i\begin{bmatrix}x_i\\y_i\\1\end{bmatrix}=P\begin{bmatrix}X_i\\1\end{bmatrix},\qquad P=\begin{bmatrix}p_1^{\mathsf T}\\p_2^{\mathsf T}\\p_3^{\mathsf T}\end{bmatrix}" style="left:0; width:1920px; top:330px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="\lambda_i\begin{bmatrix}x_i\\y_i\\1\end{bmatrix}=P\begin{bmatrix}\mathbf X_i\\1\end{bmatrix},\qquad P=\begin{bmatrix}\mathbf p_1^{\mathsf T}\\\mathbf p_2^{\mathsf T}\\\mathbf p_3^{\mathsf T}\end{bmatrix}" style="left:0; width:1920px; top:330px; text-align:center"></div>
   <ul class="abs bullets" style="left:150px; top:540px; width:1650px">
     <li>Eliminate <span class="mr"><i>λ<sub>i</sub></i></span>: two linear equations per point in the 12 entries of <span class="mr"><i>P</i></span></li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="\begin{bmatrix}\tilde X_i^{\mathsf T}&amp;0^{\mathsf T}&amp;-x_i\tilde X_i^{\mathsf T}\\0^{\mathsf T}&amp;\tilde X_i^{\mathsf T}&amp;-y_i\tilde X_i^{\mathsf T}\end{bmatrix}\begin{bmatrix}p_1\\p_2\\p_3\end{bmatrix}=0,\qquad\tilde X_i=\begin{bmatrix}X_i\\1\end{bmatrix}" style="left:0; width:1920px; top:615px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="\begin{bmatrix}\tilde{\mathbf X}_i^{\mathsf T}&amp;\mathbf 0^{\mathsf T}&amp;-x_i\tilde{\mathbf X}_i^{\mathsf T}\\\mathbf 0^{\mathsf T}&amp;\tilde{\mathbf X}_i^{\mathsf T}&amp;-y_i\tilde{\mathbf X}_i^{\mathsf T}\end{bmatrix}\begin{bmatrix}\mathbf p_1\\\mathbf p_2\\\mathbf p_3\end{bmatrix}=\mathbf 0,\qquad\tilde{\mathbf X}_i=\begin{bmatrix}\mathbf X_i\\1\end{bmatrix}" style="left:0; width:1920px; top:615px; text-align:center"></div>
   <ul class="abs bullets" style="left:150px; top:820px; width:1650px">
-    <li>Stack: <span class="mr"><i>Ap</i> = 0</span>; <span class="mr"><i>p</i></span> = the right singular vector of <span class="mr"><i>A</i></span> with the smallest singular value (the DLT of week 2, with 12 unknowns instead of 9)</li>
-    <li>Split <span class="mr"><i>P</i> = <i>K</i>[<i>R</i> | <i>t</i>]</span>: RQ decomposition of its left <span class="mr">3 × 3</span> block</li>
+    <li>Stack: <span class="mr"><i>A</i><b>p</b> = <b>0</b></span>; <span class="mr"><b>p</b></span> = the right singular vector of <span class="mr"><i>A</i></span> with the smallest singular value (the DLT of week 2, with 12 unknowns instead of 9)</li>
+    <li>Split <span class="mr"><i>P</i> = <i>K</i>[<i>R</i> | <b>t</b>]</span>: RQ decomposition of its left <span class="mr">3 × 3</span> block</li>
   </ul>
   <aside class="notes">
 New. Calibration inverts the camera matrix: from known 3D points (a calibration object) and where they appear in the image, recover P, then K, R and t. Each correspondence gives λ (x, y, 1) = P X̃; eliminating λ (λ = p3ᵀX̃) leaves two equations linear in the entries of P: p1ᵀX̃ − x p3ᵀX̃ = 0 and p2ᵀX̃ − y p3ᵀX̃ = 0. P has 11 degrees of freedom, so 6 points are needed (5½), and they must not all lie on one plane (then P is not determined: a plane only gives a homography). With more points, least squares: the right singular vector of A with the smallest singular value, exactly as for the homography in week 2 (normalize the points first, as there).

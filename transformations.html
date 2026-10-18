@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Geometric Transformations</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/transformations-Ctzl_q_x.js"></script>
+  <script type="module" crossorigin src="./assets/transformations-Caccpdhn.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/view3d-DkND2-b0.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-DST-scrg.css">
 </head>
@@ -23,17 +23,24 @@
 <!-- K2 ================================================================ -->
 <section>
   <h1 class="title">Geometric Transformations</h1>
-  <ul class="abs bullets" style="left:378px; top:358px; width:1300px">
+  <ul class="abs bullets" style="left:378px; top:250px; width:1300px">
     <li>Why do we need them?</li>
-    <li class="sub">Want to define an object in one coordinate system, then place it in another system.</li>
+    <li class="sub">Change the coordinate system of an object.</li>
     <li class="sub">Allow us to create multiple instances of objects.</li>
     <li class="sub">Animation (time-dependent transformations).</li>
     <li class="sub">Display using device independent coordinates.</li>
     <li class="sub">3D viewing (projections).</li>
+    <li class="sub">Image warping: resize, rotate, rectify, morph.</li>
+    <li class="sub">Image alignment: estimate the transformation between images from corresponding points.</li>
   </ul>
   <aside class="notes">
     Motivation: modeling (local to world coordinates), instancing, animation, device-independent display,
     and, in week 3, 3D viewing.
+
+    The last two are the image side: warping an image (resizing, rotating, rectifying a perspective view,
+    morphing; the second hour) and aligning images (week 10: panoramas, tracking, comparing scans). Note the
+    difference: in graphics we usually know the transformation and apply it; in image processing and vision
+    we often have to estimate it from the images, from corresponding points (also the second hour).
   </aside>
 </section>
 
@@ -104,6 +111,32 @@
   </aside>
 </section>
 
+<!-- new: the dot product as projection -->
+<section>
+  <h1 class="title">The Dot Product as Projection</h1>
+  <div class="demo" data-demo="dotproj" data-left="60" data-top="215" data-unit="140"></div>
+  <div class="abs caption" style="left:60px; width:924px; top:905px; font-size:44px"><span class="dot-readout"></span></div>
+  <div class="abs caption gray" style="left:60px; width:924px; top:975px; font-size:34px">drag the tip of <b>v</b></div>
+  <ul class="abs bullets" style="left:1030px; top:250px; width:850px">
+    <li>For a unit vector <span class="mr"><b>û</b></span>: the signed length of the projection of <span class="mr"><b>v</b></span> onto <span class="mr"><b>û</b></span></li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\hat{\mathbf u}\cdot\mathbf v=\|\mathbf v\|\cos\theta" style="left:1030px; width:850px; top:450px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1030px; top:560px; width:850px">
+    <li>The projection itself:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="(\hat{\mathbf u}\cdot\mathbf v)\,\hat{\mathbf u}" style="left:1030px; width:850px; top:635px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1030px; top:760px; width:850px">
+    <li>Positive for <span class="mr"><i>θ</i> &lt; 90°</span>, zero when perpendicular, negative for <span class="mr"><i>θ</i> &gt; 90°</span></li>
+  </ul>
+  <aside class="notes">
+New. The geometric meaning of the dot product. With û a unit vector, û·v = ‖v‖ cos θ is the signed length of v's shadow on the line of û: drop a perpendicular from v's tip. The projected vector is (û·v)û. For a general u, divide by its length: (u·v/‖u‖²) u.
+
+Demo: drag the tip of v (double-click resets). The projection shrinks to zero as v becomes perpendicular to û and turns negative (behind the origin) past 90°.
+
+We use this all the time: the component of a vector along a direction (a coordinate in an orthonormal basis is exactly this: x = v·e₁), testing whether two directions are perpendicular, and next week splitting a vector into the parts along and across a rotation axis (Rodrigues' formula).
+  </aside>
+</section>
+
 <!-- from 02 Basics (8-10, and the 2D line of 13): two points, a line ========== -->
 <section>
   <h1 class="title">Operations on Points</h1>
@@ -164,11 +197,14 @@
        style="left:216px; top:636px"></div>
   <div class="demo" data-demo="affine" data-mode="three" data-left="1240" data-top="250" data-unit="85"></div>
   <div class="abs eq affine-readout" style="left:1240px; top:862px; width:640px; text-align:center"></div>
+  <div class="abs caption gray" style="left:1240px; top:935px; width:640px">barycentric coordinates</div>
   <aside class="notes">
     The same slide, with three points. An affine combination of a, b and c, with weights α + β + γ = 1, is
     again a point: p = a + β(b − a) + γ(c − a), the point a plus a combination of two vectors. Taking all such
     weights gives the plane through a, b and c (here, the whole 2D plane), just as two points gave a line.
     Again the same representation in any dimension: in 3D, this is how a plane is spanned by three points.
+    The weights (α, β, γ) are the barycentric coordinates of p with respect to the triangle abc; p is inside the
+    triangle exactly when all three are positive.
 
     By extension, combination of many points (n > 2) are also allowed.
     Because all weights sum to 1, we can express the first one as (1-a1-a2…-an)
@@ -219,6 +255,10 @@
     system to a new coordinate system, whose origin is at (-a,-b), and with the new axes parallel to the old ones.
 
     Demo: drag the white knob (the house's corner at the origin); a and b snap to whole units.
+    Or drag the gray-blue knob at the origin: the coordinate system (grid and axes) moves and the house stays
+    where it is, so its coordinates change by the opposite amount. Moving the axes by (2,3), onto the house's
+    corner, gives Translate(0,0): translating the object by (a,b) and translating the coordinate system by
+    (−a,−b) are the same thing, seen from the object or from the axes.
     Double-click the right grid to reset to Translate(2,3).
   </aside>
 </section>
@@ -233,6 +273,9 @@
   <aside class="notes">
     Once again, this can be viewed as scaling the object by a in the x direction, and b along the y direction,
     but also as scaling the axes of the coordinate system by 1/a and 1/b.
+
+    The house starts at (1, 1), not at the origin: scaling moves every point except the origin, so the lower
+    left corner (the dot) moves too, from (1, 1) to (a, b). Scaling is about the origin.
 
     Demo: drag the knob on the top of the right wall; a and b snap to quarters.
     Double-click to reset to Scale(2, 1.5).
@@ -438,90 +481,6 @@
   </aside>
 </section>
 
-<!-- K16 =============================================================== -->
-<section>
-  <h1 class="title">The Projective Plane</h1>
-  <ul class="abs bullets" style="left:300px; top:312px; width:1400px">
-    <li>A point in the projective plane <span class="mr"><i>P</i><sup>2</sup></span> is represented by 3 coordinates, at least one of which is non-zero.</li>
-    <li>Two 3-vectors <b class="mr">a</b>,<b class="mr">b</b> represent the same point in <span class="mr"><i>P</i><sup>2</sup></span> iff <span class="mr"><b>a</b> = <i>h</i><b>b</b></span>, where <i class="m">h</i> is a non-zero scalar.</li>
-    <li>A 2D point <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx,hy,h</i>)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x,y,</i>1)</span>.<br>Note: this is a one-to-many correspondence!</li>
-    <li>Geometric interpretation: each point <span class="mr">(<i>x,y</i>)</span> corresponds to a ray in 3D, from the origin <span class="mr">(0,0,0)</span> through the point <span class="mr">(<i>x,y,</i>1)</span></li>
-  </ul>
-  <aside class="notes">
-    Projective spaces: A point of an n-dimensional projective space, P^n, is represented by an n+1 vector of
-    coordinates, where at least of coordinate is non zero.These coordinates are called the homogeneous or
-    projective coordinates of the point. Two n+1 vectors a,b represent the same point iff there exists a nonzero
-    scalar λ, such that  λa = b.Thus, the correspondence between points and homogeneous coordinates is one to many.
-
-    Theorem: The space P^m is topologically equivalent to the unit sphere S^m of R^(m+1) in which we have
-    identified antipodal points. P^1 - the projective line. Topologically equivalent to a unit circle. P^2 - the
-    projective plane. Topologically equivalent to a sphere.
-
-    Principle of duality: there is no difference between points and lines in P^2. A point can be thought of as
-    the set of all lines passing through it. A line can be thought of as the set of all points on it. Let x be
-    the coordinates of the point, and u be the coefficients of the line equation. The equation uTx = 0 defines
-    the set of lines through a point, and also a set of points on a line. (This is too complicated. Stolfi had a
-    more intuitive explanation).
-  </aside>
-</section>
-
-<!-- K17, part 1: points (the direction comes after K18) ============== -->
-<section>
-  <h1 class="title">The Projective Plane</h1>
-  <div class="demo" data-demo="projplane" data-direction="hide" data-left="300" data-top="200" data-w="1320" data-h="860"
-       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
-  <aside class="notes">
-    Geometrically, we can think of points with a homogeneous coordinate as 3D points that live in a special
-    space: the projective plane.
-
-    Let’s embed the 2D plane in a 3D space, by adding a third axis, which we will call W.
-
-    Now, all of the 2D points will in fact live on the W=1 plane, so a location (x,y) will actually be
-    represented by the three coordinates (x,y,1)
-
-    Furthermore, in the projective plane, all the points of the form (hx, hy, h), i.e. on the ray that goes
-    from the origin through (x,y,1) are considered equivalent, corresponding to the same 2D point
-    (x,y). h must be non-zero.
-
-    Demo: the labels show the actual coordinates. Drag the background to turn the view; drag (x,y,1) across the
-    W=1 plane (x and y snap to 0.05); drag (hx,hy,h) along the ray to see h scale all three coordinates.
-    Double-click to reset.
-  </aside>
-</section>
-
-<!-- K18 =============================================================== -->
-<section>
-  <h1 class="title">The Projective Plane</h1>
-  <ul class="abs bullets" style="left:300px; top:404px; width:1400px">
-    <li>A 2D vector <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx, hy,</i> 0)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x, y,</i> 0)</span>.</li>
-    <li>A 3-vector whose 3<sup>rd</sup> coordinate is 0 has two geometric interpretations (which are really the same):</li>
-    <li class="sub">A direction</li>
-    <li class="sub">A point at infinity</li>
-  </ul>
-  <aside class="notes">
-    Next slide, in the picture: (x, y, 0) is the ray that stays in the plane W = 0. It never meets W = 1, so
-    it is not a finite point; it is the direction (x, y), or equivalently the point at infinity in that
-    direction. Translations will not affect it, as the following slides show.
-  </aside>
-</section>
-
-<!-- K17, part 2: the direction (x,y,0) ================================ -->
-<section>
-  <h1 class="title">The Projective Plane</h1>
-  <div class="demo" data-demo="projplane" data-direction="show" data-left="300" data-top="200" data-w="1320" data-h="860"
-       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
-  <aside class="notes">
-    When the third homogeneous coordinate is 0, the ray stays in the XY plane (W=0), so it has no
-    intersection with the W=1 plane and thus does not correspond to any finite point. But we can think of it as
-    a point in infinity whose direction from the origin is given by the vector (x,y). Thus, vectors/directions
-    in the affine space may be represented by triplets of the form (x,y,0).
-
-    Demo: as two slides ago, now with the direction (x,y,0) in the plane W=0, below (x,y,1) (dashed).
-    Drag (x,y,1) and the direction follows. Double-click to reset.
-  </aside>
-</section>
-
-
 <!-- K19 =============================================================== -->
 <section>
   <h1 class="title">Homogeneous Coordinates</h1>
@@ -609,6 +568,90 @@
   </aside>
 </section>
 
+<!-- K17, part 1: points (the direction comes after K18) ============== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <div class="demo" data-demo="projplane" data-direction="hide" data-left="300" data-top="200" data-w="1320" data-h="860"
+       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
+  <aside class="notes">
+    Geometrically, we can think of points with a homogeneous coordinate as 3D points that live in a special
+    space: the projective plane.
+
+    Let’s embed the 2D plane in a 3D space, by adding a third axis, which we will call W.
+
+    Now, all of the 2D points will in fact live on the W=1 plane, so a location (x,y) will actually be
+    represented by the three coordinates (x,y,1)
+
+    Furthermore, in the projective plane, all the points of the form (hx, hy, h), i.e. on the ray that goes
+    from the origin through (x,y,1) are considered equivalent, corresponding to the same 2D point
+    (x,y). h must be non-zero.
+
+    Demo: the labels show the actual coordinates. Drag the background to turn the view; drag (x,y,1) across the
+    W=1 plane (x and y snap to 0.05); drag (hx,hy,h) along the ray to see h scale all three coordinates.
+    Double-click to reset.
+  </aside>
+</section>
+
+<!-- K16 =============================================================== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <ul class="abs bullets" style="left:300px; top:312px; width:1400px">
+    <li>A point in the projective plane <span class="mr"><i>P</i><sup>2</sup></span> is represented by 3 coordinates, at least one of which is non-zero.</li>
+    <li>Two 3-vectors <b class="mr">a</b>,<b class="mr">b</b> represent the same point in <span class="mr"><i>P</i><sup>2</sup></span> iff <span class="mr"><b>a</b> = <i>h</i><b>b</b></span>, where <i class="m">h</i> is a non-zero scalar.</li>
+    <li>A 2D point <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx,hy,h</i>)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x,y,</i>1)</span>.<br>Note: this is a one-to-many correspondence!</li>
+    <li>Geometric interpretation: each point <span class="mr">(<i>x,y</i>)</span> corresponds to a ray in 3D, from the origin <span class="mr">(0,0,0)</span> through the point <span class="mr">(<i>x,y,</i>1)</span></li>
+  </ul>
+  <aside class="notes">
+    Projective spaces: A point of an n-dimensional projective space, P^n, is represented by an n+1 vector of
+    coordinates, where at least of coordinate is non zero.These coordinates are called the homogeneous or
+    projective coordinates of the point. Two n+1 vectors a,b represent the same point iff there exists a nonzero
+    scalar λ, such that  λa = b.Thus, the correspondence between points and homogeneous coordinates is one to many.
+
+    Theorem: The space P^m is topologically equivalent to the unit sphere S^m of R^(m+1) in which we have
+    identified antipodal points. P^1 - the projective line. Topologically equivalent to a unit circle. P^2 - the
+    projective plane. Topologically equivalent to a sphere.
+
+    Principle of duality: there is no difference between points and lines in P^2. A point can be thought of as
+    the set of all lines passing through it. A line can be thought of as the set of all points on it. Let x be
+    the coordinates of the point, and u be the coefficients of the line equation. The equation uTx = 0 defines
+    the set of lines through a point, and also a set of points on a line. (This is too complicated. Stolfi had a
+    more intuitive explanation).
+  </aside>
+</section>
+
+<!-- K18 =============================================================== -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <ul class="abs bullets" style="left:300px; top:404px; width:1400px">
+    <li>A 2D vector <span class="mr">(<i>x, y</i>)</span> in the Euclidean plane corresponds to all of the 3-vectors <span class="mr">(<i>hx, hy,</i> 0)</span> in <span class="mr"><i>P</i><sup>2</sup></span>, such as <span class="mr">(<i>x, y,</i> 0)</span>.</li>
+    <li>A 3-vector whose 3<sup>rd</sup> coordinate is 0 has two geometric interpretations (which are really the same):</li>
+    <li class="sub">A direction</li>
+    <li class="sub">A point at infinity</li>
+  </ul>
+  <aside class="notes">
+    Next slide, in the picture: (x, y, 0) is the ray that stays in the plane W = 0. It never meets W = 1, so
+    it is not a finite point; it is the direction (x, y), or equivalently the point at infinity in that
+    direction. Translations do not affect it: in the translation matrix (Homogeneous Coordinates, earlier), the
+    translation column multiplies the third coordinate, which is 0 here.
+  </aside>
+</section>
+
+<!-- K17, part 2: the direction (x,y,0) ================================ -->
+<section>
+  <h1 class="title">The Projective Plane</h1>
+  <div class="demo" data-demo="projplane" data-direction="show" data-left="300" data-top="200" data-w="1320" data-h="860"
+       data-ox="600" data-oy="600" data-unit="240" data-persp="6"></div>
+  <aside class="notes">
+    When the third homogeneous coordinate is 0, the ray stays in the XY plane (W=0), so it has no
+    intersection with the W=1 plane and thus does not correspond to any finite point. But we can think of it as
+    a point in infinity whose direction from the origin is given by the vector (x,y). Thus, vectors/directions
+    in the affine space may be represented by triplets of the form (x,y,0).
+
+    Demo: as on the first Projective Plane slide, now with the direction (x,y,0) in the plane W=0, below (x,y,1) (dashed).
+    Drag (x,y,1) and the direction follows. Double-click to reset.
+  </aside>
+</section>
+
 <!-- K30 =============================================================== -->
 <section>
   <h1 class="title">Affine Transformations: Definition</h1>
@@ -681,6 +724,7 @@
     correspond to 3 by 3 matrices where the lower row is (0,0,1) and the upper left 2 by 2 matrix is orthogonal.
   </aside>
 </section>
+
 
 <!-- K20 =============================================================== -->
 <section>
@@ -1082,20 +1126,21 @@
   <div class="abs eq cell-readout" style="left:566px; width:376px; top:735px; text-align:center"></div>
   <ul class="abs bullets" style="left:1010px; top:270px; width:860px; font-size:46px">
     <li>Warp backward: for each destination pixel, find its cell and its position <span class="mr">(<i>a</i>, <i>b</i>)</span> in that cell</li>
-    <li>Fetch from the same <span class="mr">(<i>a</i>, <i>b</i>)</span> in the source cell: bilinear interpolation of its corners</li>
+    <li>Interpolate the position inside the source cell for the same <span class="mr" style="white-space:nowrap">(<i>a</i>, <i>b</i>)</span></li>
     <li>Easiest when the destination mesh is regular: the cell and <span class="mr">(<i>a</i>, <i>b</i>)</span> follow directly from <span class="mr">(<i>x</i>, <i>y</i>)</span></li>
   </ul>
   <div class="abs eq" data-scale="5"
-       data-tex="g(\mathbf{x})=f\bigl(\mathbf{x}+\mathbf{d}(\mathbf{x})\bigr)"
-       style="left:1010px; width:860px; top:860px; text-align:center"></div>
+       data-tex="\mathit{dst}(\mathbf{x})=\mathit{src}\bigl(\mathbf{x}+\mathbf{d}(\mathbf{x})\bigr)"
+       style="left:1010px; width:860px; top:910px; text-align:center"></div>
   <aside class="notes">
     How the previous slide's output is computed: backward warping again. A destination pixel lies in some
-    destination cell, at relative position (a, b); it fetches from the point with the same (a, b) in the
-    corresponding source cell, which is the bilinear interpolation of that cell's four corners.
+    destination cell, at relative position (a, b); its source position is the interpolated position inside the
+    corresponding source cell for the same (a, b): bilinearly from the cell's four corners, or more smoothly
+    (bicubic, which also uses the neighboring vertices): next slide.
 
     So we usually put the regular mesh in the destination: then finding the cell and (a, b) is trivial, and the
     source vertices just store where each destination vertex fetches from, a displacement d known at the
-    vertices: g(x) = f(x + d(x)). Filling in d between vertices is an interpolation problem (next slide).
+    vertices: dst(x) = src(x + d(x)). Filling in d between vertices is an interpolation problem (next slide).
 
     Demo: drag the point in the destination cell; the arrow shows where it fetches from. Double-click to reset.
   </aside>
@@ -1129,7 +1174,7 @@
 </section>
 
 <!-- replaces slide 45, moved before morphing (which needs it) ========== -->
-<section>
+<section data-visibility="hidden">   <!-- hidden by DL; delete the attribute to show it again -->
   <h1 class="title">When the Destination Mesh Is Not Regular</h1>
   <ul class="abs bullets" style="left:150px; top:222px; width:1650px; font-size:46px">
     <li>Which cell contains the pixel? What is its <span class="mr">(<i>a</i>, <i>b</i>)</span>? Both hard for a general quad</li>
