@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Geometric Transformations</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/transformations-Caccpdhn.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/view3d-DkND2-b0.js">
-  <link rel="stylesheet" crossorigin href="./assets/view3d-DST-scrg.css">
+  <script type="module" crossorigin src="./assets/transformations-CmylD3Gb.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/transformations-DST-scrg.css">
 </head>
 <body>
 <!-- Converted from "W2-1 2D Transformations.key". Positions are slide pixels on the 1920 x 1080 canvas
@@ -129,7 +128,7 @@
     <li>Positive for <span class="mr"><i>θ</i> &lt; 90°</span>, zero when perpendicular, negative for <span class="mr"><i>θ</i> &gt; 90°</span></li>
   </ul>
   <aside class="notes">
-New. The geometric meaning of the dot product. With û a unit vector, û·v = ‖v‖ cos θ is the signed length of v's shadow on the line of û: drop a perpendicular from v's tip. The projected vector is (û·v)û. For a general u, divide by its length: (u·v/‖u‖²) u.
+The geometric meaning of the dot product. With û a unit vector, û·v = ‖v‖ cos θ is the signed length of v's shadow on the line of û: drop a perpendicular from v's tip. The projected vector is (û·v)û. For a general u, divide by its length: (u·v/‖u‖²) u.
 
 Demo: drag the tip of v (double-click resets). The projection shrinks to zero as v becomes perpendicular to û and turns negative (behind the origin) past 90°.
 
@@ -562,7 +561,7 @@ We use this all the time: the component of a vector along a direction (a coordin
     Reflect through the above axis;
     Apply inverse rotation, followed by inverse translation;
 
-    Demo (replaces Keynote slides 23-29): the dashed outline is the goal. Five arrow-key steps: translate,
+    Demo: the dashed outline is the goal. Five arrow-key steps: translate,
     rotate, reflect (S(1,−1), from the scaling slide), rotate back, translate back. Before the first step,
     drag the knob on the y axis to move the line, the other knob to tilt it.
   </aside>
@@ -742,8 +741,8 @@ We use this all the time: the component of a vector along a direction (a coordin
        data-tex="\begin{bmatrix}a&amp;b&amp;m\\c&amp;d&amp;n\\p&amp;q&amp;s\end{bmatrix}\begin{bmatrix}x\\y\\1\end{bmatrix}=\begin{bmatrix}ax+by+m\\cx+dy+n\\px+qy+s\end{bmatrix}\;\rightarrow\;\begin{bmatrix}\dfrac{ax+by+m}{px+qy+s}\rule[-1.3em]{0pt}{3.2em}\\\dfrac{cx+dy+n}{px+qy+s}\rule[-1.3em]{0pt}{3.2em}\\1\rule{0pt}{1.4em}\end{bmatrix}"
        style="left:0; width:1920px; top:684px; text-align:center"></div>
   <aside class="notes">
-    (Build, on a click: the product with a general last row [p q s]. The third coordinate w = px + qy + s
-    is no longer 1; dividing by it brings the point back to w = 1, and the result is no longer linear in x, y.)
+    On a click: the product with a general last row [p q s]. The third coordinate w = px + qy + s is no
+    longer 1; dividing by it brings the point back to w = 1, and the result is no longer linear in x, y.
 
     What if the bottom row is not [0,0,1]?
 
@@ -892,7 +891,7 @@ We use this all the time: the component of a vector along a direction (a coordin
   <div class="abs caption" style="left:86.4px; top:763.2px; width:864px">A plane seen in two images</div>
   <div class="abs caption" style="left:969.6px; top:763.2px; width:864px">A camera rotating about its center</div>
   <aside class="notes">
-    Figures after Hartley and Zisserman, as used in the IP recitations, redrawn as 3D scenes. The rotation
+    After Hartley and Zisserman. The rotation
     case is why panoramas can be stitched with homographies (week 10).
   </aside>
 </section>
@@ -1241,7 +1240,7 @@ We use this all the time: the component of a vector along a direction (a coordin
   <div class="abs eq" data-scale="4.4" data-tex="M_t=(1-t)\,M_A+t\,M_B\qquad I_t=(1-t)\,\tilde I_A+t\,\tilde I_B"
        style="left:0; width:1920px; top:870px; text-align:center"></div>
   <aside class="notes">
-    Live, replacing the static figure after Wolberg. Image A with its mesh M_A, image B with M_B (corresponding
+    Image A with its mesh M_A, image B with M_B (corresponding
     vertices). For a time t: the intermediate mesh M_t, vertex by vertex; A warped from M_A to M_t; B warped from
     M_B to M_t (the tildes); and the morph, their cross-dissolve. At t = 0 the morph is A, at t = 1 it is B.
     The warps are drawn with the "same (a, b) in corresponding cells" rule; triangles would serve as well.
