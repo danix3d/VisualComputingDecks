@@ -106,7 +106,7 @@ Two uses coming up: in Rodrigues' formula, for a unit axis k, k × v is v⊥ tur
   </ul>
   <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}a&amp;0&amp;0&amp;0\\0&amp;b&amp;0&amp;0\\0&amp;0&amp;c&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}ax\\by\\cz\\1\end{bmatrix}" style="left:760px; top:680px"></div>
   <aside class="notes">
-Here, as in the 2D case, if the lower right element of the matrix is different from 1, the result is overall scaling.
+Here, as in the 2D case, if the lower right element of the matrix is some s ≠ 1, the result (after dividing by it) is a uniform scaling by 1/s.
   </aside>
 </section>
 
@@ -137,13 +137,16 @@ Suppose we know a point P on the plane.
   <ul class="abs bullets" style="left:300px; top:360px; width:400px">
     <li>Shearing:</li>
   </ul>
-  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;a&amp;b&amp;0\\c&amp;1&amp;d&amp;0\\e&amp;f&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x+ay+bz\\cx+y+dz\\ex+fy+z\\1\end{bmatrix}" style="left:640px; top:250px"></div>
-  <ul class="abs bullets" style="left:300px; top:690px; width:1400px">
-    <li>The change in each coordinate is a linear combination of all three</li>
-    <li>Transforms a cube into a general parallelepiped</li>
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;a&amp;b&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}=\begin{bmatrix}x+ay+bz\\y\\z\\1\end{bmatrix}" style="left:640px; top:250px"></div>
+  <ul class="abs bullets" style="left:300px; top:600px; width:1400px">
+    <li>Only <span class="mr"><i>x</i></span> changes, in proportion to <span class="mr"><i>y</i></span> and <span class="mr"><i>z</i></span></li>
+    <li>Shears of <span class="mr"><i>y</i></span> and of <span class="mr"><i>z</i></span> are defined similarly</li>
+    <li>A cube becomes a parallelepiped of equal volume</li>
   </ul>
   <aside class="notes">
-Think of the unit cube. Each face of the cube (a square) is distorted into a parallelogram, and the cube turns into a general parallelepiped, also anchored at the origin.
+Think of the unit cube as a stack of thin layers: each layer slides in x, in proportion to its y and z, like a deck of cards pushed sideways. Edges along x keep their length, the square faces become parallelograms, and the cube becomes a parallelepiped, still anchored at the origin, with the same volume: the determinant is 1.
+
+Putting all six off-diagonal entries into one matrix gives a general linear map, not a shear: with a = c = 1 and the others 0, for example, the determinant is 0 and the cube collapses flat.
   </aside>
 </section>
 
@@ -171,7 +174,7 @@ Note that when rotating about y, we must reverse the signs on the sines, in orde
     <li>The idea: make the arbitrary axis coincident with one of the coordinate axes, rotate, and then transform back:</li>
     <li class="sub">Translate rotation axis to pass through the origin;</li>
     <li class="sub">Rotate about the X axis into the XZ plane;</li>
-    <li class="sub">Rotate about the Y axis into the YZ plane - rotation axis is now aligned with the Z axis;</li>
+    <li class="sub">Rotate about the Y axis onto the Z axis;</li>
     <li class="sub">Rotate about the Z axis by the desired angle;</li>
     <li class="sub">Apply inverse rotations about the Y and X axes;</li>
     <li class="sub">Apply inverse translation.</li>
@@ -204,7 +207,7 @@ The video (linked at the bottom) animates these steps.
   <div class="abs eq" data-scale="4.2" data-tex="R=\cos\theta\,I+\sin\theta\,[\mathbf k]_\times+(1-\cos\theta)\,\mathbf k\mathbf k^{\mathsf T}" style="left:1060px; width:830px; top:740px; text-align:center"></div>
   <div class="abs eq" data-scale="3.6" data-tex="[\mathbf k]_\times=\begin{bmatrix}0&amp;-k_z&amp;k_y\\k_z&amp;0&amp;-k_x\\-k_y&amp;k_x&amp;0\end{bmatrix}" style="left:1060px; width:830px; top:840px; text-align:center"></div>
   <aside class="notes">
-The closed form of the five-step composition on the previous slides: rotation by θ about a unit axis k through the origin (for an axis through another point, translate it to the origin first, as before). Stated, not derived; the picture is the derivation. The component of v along the axis, v∥ = (k·v)k, does not move. The rest, v⊥, lies in the plane perpendicular to k and turns in that plane by θ, toward k × v, which is v⊥ turned by 90° (same length). So Rv = v∥ + cos θ v⊥ + sin θ (k × v). Writing k × v as the matrix [k]× applied to v, and v∥ as kkᵀv, gives the matrix form.
+The closed form of the rotations on the previous slide (the steps between the two translations): rotation by θ about a unit axis k through the origin (for an axis through another point, translate it to the origin first, as before). Stated, not derived; the picture is the derivation. The component of v along the axis, v∥ = (k·v)k, does not move. The rest, v⊥, lies in the plane perpendicular to k and turns in that plane by θ, toward k × v, which is v⊥ turned by 90° (same length). So Rv = v∥ + cos θ v⊥ + sin θ (k × v). Writing k × v as the matrix [k]× applied to v, and v∥ as kkᵀv, gives the matrix form.
 
 Demo: move the θ slider; the tip of v travels on the dashed circle. Drag the view to turn it (double-click resets).
 
@@ -532,7 +535,7 @@ The next slide puts these steps together as the graphics pipeline.
 <section>
   <h1 class="title">The Graphics Pipeline</h1>
   <img class="abs" src="./assets/gpipe-666CTpQs.svg" alt="Object, world, eye, clip, normalized device and raster coordinates, and the transformations between them" style="left:60px; top:205px; width:1800px; height:800px">
-  <img class="abs fragment" data-fragment-index="1" src="./assets/gpipe_clip-BjK_V610.svg" alt="Clip before dividing by w" style="left:60px; top:205px; width:1800px; height:800px">
+  <img class="abs fragment" data-fragment-index="1" src="./assets/gpipe_clip-BdSjybOe.svg" alt="Clip before dividing by w" style="left:60px; top:205px; width:1800px; height:800px">
   <img class="abs fragment" data-fragment-index="2" src="./assets/gpipe_z-CV5GLGQr.svg" alt="The depth z is kept" style="left:60px; top:205px; width:1800px; height:800px">
   <aside class="notes">
 The whole viewing pipeline in one place. The rest of the lecture fills in the stages one by one: positioning the camera (V), projections and the projection matrix (P), the frustum and the depth mapping, clipping, the viewport; and at the end, the camera matrix P = K[R|t] is this same chain.
@@ -543,9 +546,9 @@ M, V and P are 4×4 matrices, composed into one and applied to every vertex. Eve
 
 Under the boxes, one scene (a house, a cube and a sphere) followed through the pipeline, computed with these very steps. The house in its own coordinates, around its own origin. The scene placed in the world, with the camera and the start of its view frustum. The same scene in eye coordinates: the camera at the origin, looking down −z, with the frustum from the near plane to the far plane. Clipping: the sphere sticks out through the right side of the frustum and is cut there, so we see into it. Normalized device coordinates: the frustum has become the cube, drawn from the same side as the frustum before it (near faces toward the camera); objects near the camera are enlarged the most, and depth is compressed toward the far face. Raster coordinates: the image the camera takes, in pixels (here a viewport of only 32 × 24 pixels, so that the pixels are visible).
 
-Click 1: clipping is done in clip coordinates, before the division. A point behind the eye has w &lt; 0; after dividing by w it could land inside the cube and be drawn. In clip coordinates the test is simply −w ≤ x, y, z ≤ w.
+Click 1: clipping is done in clip coordinates, before the division, while the sign of w still tells points in front of the eye (w &gt; 0) from points behind it. The test is simply −w ≤ x, y, z ≤ w. After the division, an edge or triangle that crosses the eye plane would be drawn between its projected vertices, over the wrong part of the image (the clipping slides show an example).
 
-Click 2: why keep z at all, when the picture is 2D? After the projection the depth still orders the points along each ray (the mapping is monotonic, though not linear), and the z-buffer uses it to decide which surface is visible. This is week 7: rasterization (and the vertex and fragment processors of the GPU) takes over after the viewport.
+Click 2: why keep z at all, when the picture is 2D? After the projection the depth still orders the points along each ray (the mapping is monotonic, though not linear), and the z-buffer uses it to decide which surface is visible. This is week 7: after the viewport, rasterization turns each triangle into pixels and the fragment processor of the GPU shades them; the vertex processor works earlier, computing the clip coordinates of each vertex.
   </aside>
 </section>
 
@@ -1011,7 +1014,7 @@ glFrustum defines a perspective transformation matrix as follows: (left,bottom,-
   <aside class="notes">
 Notes:
 As long as the window defined by (r,l) and (t,b) is symmetric about the Z-axis (in other words l = -r and b = -t), the shearing terms in the third column are identically zero, and no shearing will take place.
-Making r and l closer to each other (shrinking the horizontal width of the window) results in an increase in the X-axis scaling – horizontal zoom. Similarly, making t and b closer zooms along the Y-axis. In fact, (2n/(r-l)) is simply 1/tan(h) where h is the half the horizontal viewing angle.
+Making r and l closer to each other (shrinking the horizontal width of the window) results in an increase in the X-axis scaling – horizontal zoom. Similarly, making t and b closer zooms along the Y-axis. In fact, for a symmetric window (l = -r), 2n/(r-l) is simply 1/tan(h), where h is half the horizontal viewing angle.
   </aside>
 </section>
 
@@ -1056,7 +1059,7 @@ Demo: move the sliders; drag either view to turn it. The matrix updates live. Th
     <li>The view volume is defined as a general (possibly skewed) viewing pyramid. We first make this pyramid into a canonical one:</li>
     <li>We first shear the skewed pyramid, then scale.</li>
   </ul>
-  <img class="abs" src="./assets/deriv3-BOunD4vo.svg" alt="The skewed pyramid, the symmetric pyramid, the canonical pyramid" style="left:210px; top:560px; width:1500px; height:420px">
+  <img class="abs" src="./assets/deriv3-D2343gZm.svg" alt="The skewed pyramid, the symmetric pyramid, the canonical pyramid" style="left:210px; top:540px; width:1500px; height:439px">
 </section>
 
 <!-- V37 -->
@@ -1065,18 +1068,8 @@ Demo: move the sliders; drag either view to turn it. The matrix updates live. Th
   <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
     <li>Transforms the center of the viewing window on the near plane <span class="mr">[(<i>r</i>+<i>l</i>)/2, (<i>t</i>+<i>b</i>)/2, −<i>n</i>]</span> to <span class="mr">[0, 0, −<i>n</i>]</span>, making the view pyramid symmetric about the Z-axis:</li>
   </ul>
-  <img class="abs" src="./assets/shear-CaarkHur.svg" alt="Shearing the skewed pyramid into a symmetric one" style="left:460px; top:560px; width:1000px; height:440px">
-  <aside class="notes">
-What is the appropriate shearing transform? Consider the line through the center of the skewed pyramid. It goes from the origin to the point ((r+l)/2, (t+b)/2, -n)
-After shearing we’d like this vector to lie on the negative z-axis, transforming the point above onto (0, 0, -n). It is easy to see that this can be accomplished by the above matrix.
-  </aside>
-</section>
-
-<!-- V38 -->
-<section>
-  <h1 class="title">Shearing Matrix</h1>
-  <img class="abs" src="./assets/shear-CaarkHur.svg" alt="Shearing the skewed pyramid into a symmetric one" style="left:510px; top:210px; width:900px; height:396px">
-  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;\frac{r+l}{2n}&amp;0\\0&amp;1&amp;\frac{t+b}{2n}&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r+l}{2}\\\frac{t+b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}0\\0\\-n\\1\end{bmatrix}" style="left:0; width:1920px; top:680px; text-align:center"></div>
+  <img class="abs" src="./assets/shear-Cik5i8YH.svg" alt="Shearing the skewed pyramid into a symmetric one" style="left:30px; top:470px; width:980px; height:465px">
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;\frac{r+l}{2n}&amp;0\\0&amp;1&amp;\frac{t+b}{2n}&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r+l}{2}\\\frac{t+b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}0\\0\\-n\\1\end{bmatrix}" style="left:1000px; width:900px; top:520px; text-align:center"></div>
   <aside class="notes">
 What is the appropriate shearing transform? Consider the line through the center of the skewed pyramid. It goes from the origin to the point ((r+l)/2, (t+b)/2, -n)
 After shearing we’d like this vector to lie on the negative z-axis, transforming the point above onto (0, 0, -n). It is easy to see that this can be accomplished by the above matrix.
@@ -1089,17 +1082,8 @@ After shearing we’d like this vector to lie on the negative z-axis, transformi
   <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
     <li>Scale the symmetric pyramid to create a 45 degree angle between each plane and the Z-axis:</li>
   </ul>
-  <img class="abs" src="./assets/scale-867zURTP.svg" alt="Scaling the symmetric pyramid to a 45 degree one" style="left:510px; top:520px; width:900px; height:460px">
-  <aside class="notes">
-Now that the pyramid is symmetric around the origin, let’s find a scaling matrix that would make 45 degree angles between its planes and the negative z-axis. We can achieve this goal by scaling the near window, such that both its width and its height become 2n. It is easy to see that this can be accomplished by the above matrix.
-  </aside>
-</section>
-
-<!-- V40 -->
-<section>
-  <h1 class="title">Scaling Matrix</h1>
-  <img class="abs" src="./assets/scale-867zURTP.svg" alt="Scaling the symmetric pyramid to a 45 degree one" style="left:610px; top:200px; width:700px; height:358px">
-  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac{2n}{t-b}&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r-l}{2}\\\frac{t-b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}n\\n\\-n\\1\end{bmatrix}" style="left:0; width:1920px; top:620px; text-align:center"></div>
+  <img class="abs" src="./assets/scale-BjMAZcFe.svg" alt="Scaling the symmetric pyramid to a 45 degree one" style="left:60px; top:420px; width:900px; height:512px">
+  <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}\frac{2n}{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac{2n}{t-b}&amp;0&amp;0\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}\frac{r-l}{2}\\\frac{t-b}{2}\\-n\\1\end{bmatrix}=\begin{bmatrix}n\\n\\-n\\1\end{bmatrix}" style="left:1000px; width:900px; top:550px; text-align:center"></div>
   <aside class="notes">
 Now that the pyramid is symmetric around the origin, let’s find a scaling matrix that would make 45 degree angles between its planes and the negative z-axis. We can achieve this goal by scaling the near window, such that both its width and its height become 2n. It is easy to see that this can be accomplished by the above matrix.
   </aside>
@@ -1130,7 +1114,7 @@ Other matrices might have done the job as well, but this one retains the z value
   <ul class="abs bullets" style="left:250px; top:230px; width:1450px">
     <li>The canonical pyramid is then transformed into a cube, using a perspective transformation:</li>
   </ul>
-  <img class="abs" src="./assets/to_cube-a1G-s_2c.svg" alt="The canonical pyramid between -n and -f becomes the cube between -1 and 1" style="left:60px; top:380px; width:820px; height:430px">
+  <img class="abs" src="./assets/to_cube-B7T50kZQ.svg" alt="The canonical pyramid between -n and -f becomes the cube between -1 and 1" style="left:60px; top:380px; width:820px; height:430px">
   <div class="abs eq" data-scale="5" data-tex="\begin{bmatrix}1&amp;0&amp;0&amp;0\\0&amp;1&amp;0&amp;0\\0&amp;0&amp;A&amp;B\\0&amp;0&amp;-1&amp;0\end{bmatrix}" style="left:950px; top:380px"></div>
   <div class="abs eq" data-scale="4.2" data-tex="-1=\frac{-An+B}{n}\qquad 1=\frac{-Af+B}{f}" style="left:950px; top:690px"></div>
   <div class="abs eq" data-scale="5" data-tex="A=-\frac{f+n}{f-n}\qquad B=\frac{-2fn}{f-n}" style="left:950px; top:860px"></div>
@@ -1161,6 +1145,7 @@ B = 2fn/(n-f)
 <section>
   <h1 class="title">Non-linear (but monotonic) mapping of Z values</h1>
   <div class="demo" data-demo="zmap" data-plot="120,215,1150,820"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="z_{\mathrm{ndc}}=\frac{f+n}{f-n}+\frac{2fn}{(f-n)\,z_{\mathrm{eye}}}" style="left:640px; width:600px; top:740px; text-align:center"></div>
   <div class="abs demo" style="left:1320px; top:300px; width:540px" data-prevent-swipe>
     <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px"><span class="lab lab-n"></span><input type="range" name="n" min="-1" max="0.7" step="0.01"></div>
     <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px; margin-top:40px"><span class="lab lab-f"></span><input type="range" name="f" min="0.3" max="3" step="0.01"></div>
@@ -1175,19 +1160,19 @@ The near plane matters more than the far one. z_ndc = (f+n)/(f−n) − 2fn/((f�
 </section>
 
 <!-- V46 -->
-<section>
+<section data-visibility="hidden">
   <h1 class="title">View Frustum Clipping</h1>
   <img class="abs" src="./assets/clip-BgjROhEK.svg" alt="A triangle clipped by the view frustum, and in the normalized view volume" style="left:110px; top:220px; width:1700px; height:631px">
   <ul class="abs bullets" style="left:250px; top:890px; width:1450px">
-    <li>After applying the projection and normalizing, all of the coordinates lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
+    <li>After applying the projection and normalizing, all points inside the view frustum lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
   </ul>
   <aside class="notes">
 The coordinates of any point after the perspective divide must lie inside the [-1,1] cube. Thus, in homogeneous coordinates it must hold that x/w &lt; 1 and also x/w &gt; -1, and so forth for the y and z coordinates.
 Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get x &lt; w, x &gt; -w, and so forth.
 
 Clipping in homogeneous coordinates has two main advantages:
-We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
-The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+The sign of w is still known, so primitives that cross the eye plane (w = 0) can be clipped correctly. After the perspective divide the sign is lost: a point behind the eye can get valid-looking screen coordinates x and y, mirrored (its z_ndc is always greater than 1, so a single point is still rejected), and an edge or triangle with vertices on both sides of the eye plane, drawn between its projected vertices, covers the wrong part of the screen;
+The clipping algorithm is exactly the same regardless of the type of projection: orthographic or perspective. This makes it easier to implement clipping in hardware.
 
 A triangle partly outside the frustum, its clipped part, and the clipped part in normalized coordinates.
   </aside>
@@ -1196,19 +1181,22 @@ A triangle partly outside the frustum, its clipped part, and the clipped part in
 <!-- V47 -->
 <section>
   <h1 class="title">View Frustum Clipping</h1>
-  <ul class="abs bullets" style="left:250px; top:240px; width:1450px">
-    <li>After applying the projection and normalizing, all of the coordinates lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
+  <ul class="abs bullets" style="left:250px; top:210px; width:1450px">
+    <li>After applying the projection and normalizing, all points inside the view frustum lie in the canonical cube <span class="mr">[−1,1]×[−1,1]×[−1,1]</span></li>
     <li>View frustum clipping may be done by checking each coordinate against the interval <span class="mr">[−1,1]</span></li>
-    <li><b>Problem</b>: points <i>behind</i> the camera can also be mapped to the canonical view cube.</li>
+    <li><b>Problem</b>: an edge that crosses behind the eye projects to the wrong segment.</li>
     <li><b>Solution</b>: perform clipping <i>before</i> the perspective division.</li>
   </ul>
+  <img class="abs" src="./assets/clip_behind-Ssw92EoB.svg" alt="An edge from A in front of the eye to B behind it: its projected endpoints A′ and B′ are joined by a segment through the cube, while the clipped part A..C maps to A′..C′" style="left:310px; top:735px; width:1300px; height:320px">
   <aside class="notes">
 The coordinates of any point after the perspective divide must lie inside the [-1,1] cube. Thus, in homogeneous coordinates it must hold that x/w &lt; 1 and also x/w &gt; -1, and so forth for the y and z coordinates.
 Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get x &lt; w, x &gt; -w, and so forth.
 
 Clipping in homogeneous coordinates has two main advantages:
-We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
-The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+The sign of w is still known, so primitives that cross the eye plane (w = 0) can be clipped correctly. After the perspective divide the sign is lost: a point behind the eye can get valid-looking screen coordinates x and y, mirrored (its z_ndc is always greater than 1, so a single point is still rejected), and an edge or triangle with vertices on both sides of the eye plane, drawn between its projected vertices, covers the wrong part of the screen;
+The clipping algorithm is exactly the same regardless of the type of projection: orthographic or perspective. This makes it easier to implement clipping in hardware.
+
+The figure, with n = 1 and f = 3: the edge AB starts at A, inside the frustum, and ends at B, behind the eye. B has w = −z &lt; 0, so after the division its y lands on the mirrored side, and its z_ndc is greater than 1 (every point behind the eye gets z_ndc &gt; (f+n)/(f−n) &gt; 1). A point test alone would reject B correctly. The trouble is the edge: the rasterizer joins the projected endpoints A′ and B′, and that segment (dashed) cuts through the cube although it is not the image of AB; the true image of the edge runs off to infinity in the other direction. Clipping against the near plane first keeps only the part from A to C, and its image A′C′ is correct.
   </aside>
 </section>
 
@@ -1228,8 +1216,8 @@ The coordinates of any point after the perspective divide must lie inside the [-
 Note that points in front of the eye all have a negative z coordinate, since the camera is looking down the negative Z axis. Thus, their w coordinate must be positive. Then multiplying the inequalities by w does not flip the inequality, and we get -w &lt; x &lt; w, and so forth.
 
 Clipping in homogeneous coordinates has two main advantages:
-We are able to identify coordinates behind the eye (after the perspective divide those might have perfectly valid screen coordinates);
-The clipping algorithm is exactly the same regardless of the type of projection: orthogonal or perspective. This makes it easier to implement clipping in hardware.
+The sign of w is still known, so primitives that cross the eye plane (w = 0) can be clipped correctly. After the perspective divide the sign is lost: a point behind the eye can get valid-looking screen coordinates x and y, mirrored (its z_ndc is always greater than 1, so a single point is still rejected), and an edge or triangle with vertices on both sides of the eye plane, drawn between its projected vertices, covers the wrong part of the screen;
+The clipping algorithm is exactly the same regardless of the type of projection: orthographic or perspective. This makes it easier to implement clipping in hardware.
   </aside>
 </section>
 
