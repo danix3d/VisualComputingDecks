@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>3D Transformations and Viewing</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/viewing-BtQFLrSK.js"></script>
+  <script type="module" crossorigin src="./assets/viewing-Cckf8Wcd.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/view3d-jKIGT8G8.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-D7SW_Fiv.css">
 </head>
@@ -534,9 +534,9 @@ The next slide puts these steps together as the graphics pipeline.
 <!-- new: the graphics pipeline in one place -->
 <section>
   <h1 class="title">The Graphics Pipeline</h1>
-  <img class="abs" src="./assets/gpipe-666CTpQs.svg" alt="Object, world, eye, clip, normalized device and raster coordinates, and the transformations between them" style="left:60px; top:205px; width:1800px; height:800px">
+  <img class="abs" src="./assets/gpipe-Bg6LLtb-.svg" alt="Object, world, eye, clip, normalized device and raster coordinates, and the transformations between them" style="left:60px; top:205px; width:1800px; height:800px">
   <img class="abs fragment" data-fragment-index="1" src="./assets/gpipe_clip-BdSjybOe.svg" alt="Clip before dividing by w" style="left:60px; top:205px; width:1800px; height:800px">
-  <img class="abs fragment" data-fragment-index="2" src="./assets/gpipe_z-CV5GLGQr.svg" alt="The depth z is kept" style="left:60px; top:205px; width:1800px; height:800px">
+  <img class="abs fragment" data-fragment-index="2" src="./assets/gpipe_z-gEgP1UY1.svg" alt="The depth z is kept" style="left:60px; top:205px; width:1800px; height:800px">
   <aside class="notes">
 The whole viewing pipeline in one place. The rest of the lecture fills in the stages one by one: positioning the camera (V), projections and the projection matrix (P), the frustum and the depth mapping, clipping, the viewport; and at the end, the camera matrix P = K[R|t] is this same chain.
 
@@ -548,7 +548,7 @@ Under the boxes, one scene (a house, a cube and a sphere) followed through the p
 
 Click 1: clipping is done in clip coordinates, before the division, while the sign of w still tells points in front of the eye (w &gt; 0) from points behind it. The test is simply −w ≤ x, y, z ≤ w. After the division, an edge or triangle that crosses the eye plane would be drawn between its projected vertices, over the wrong part of the image (the clipping slides show an example).
 
-Click 2: why keep z at all, when the picture is 2D? After the projection the depth still orders the points along each ray (the mapping is monotonic, though not linear), and the z-buffer uses it to decide which surface is visible. This is week 7: after the viewport, rasterization turns each triangle into pixels and the fragment processor of the GPU shades them; the vertex processor works earlier, computing the clip coordinates of each vertex.
+Click 2: why keep z at all, when the picture is 2D? After the projection the depth still orders the points along each ray (the mapping is monotonic, though not linear), and that is what decides which surface is visible where objects occlude each other. This is week 7: after the viewport, rasterization turns each triangle into pixels and the fragment processor of the GPU shades them; the vertex processor works earlier, computing the clip coordinates of each vertex.
   </aside>
 </section>
 
@@ -1155,7 +1155,7 @@ B = 2fn/(n-f)
   <aside class="notes">
 This plot shows the values of Z after the perspective transformation (for near = 1 and far = 10 by default; the sliders change them, on a logarithmic scale). The Z values in the interval [-1,-10] are mapped in a non-linear, but monotonic, fashion to the range [-1,1]. We will also see that this mapping preserves lines and planes. This property along with the monotonicity allows us to subsequently use the Z values for depth comparisons which we need to make in order to perform hidden surface removal later on.
 
-The near plane matters more than the far one. z_ndc = (f+n)/(f−n) − 2fn/((f−n)d), so half of the [−1, 1] range is used up by d = 2nf/(f+n), which is about 2n when f ≫ n: the precision is spent close to the eye. Try n = 0.1, f = 1000: half of the range is gone by d ≈ 0.2. The resolution of a 24-bit depth buffer at distance d is about 2⁻²⁴ (f−n) d²/(fn): at the far plane, 2⁻²⁴ (f−n) f/n, which grows like f/n. Pushing the far plane out costs little; pulling the near plane in costs a lot. Far-away surfaces whose depths fall into the same bucket flicker (z-fighting), back in week 7.
+The near plane matters more than the far one. z_ndc = (f+n)/(f−n) − 2fn/((f−n)d), so half of the [−1, 1] range is used up by d = 2nf/(f+n), which is about 2n when f ≫ n: the precision is spent close to the eye. Try n = 0.1, f = 1000: half of the range is gone by d ≈ 0.2. If depths are stored with 24 bits, the resolution at distance d is about 2⁻²⁴ (f−n) d²/(fn): at the far plane, 2⁻²⁴ (f−n) f/n, which grows like f/n. Pushing the far plane out costs little; pulling the near plane in costs a lot. Far-away surfaces whose depths fall into the same step cannot be told apart, and the wrong one may show through (more in week 7).
   </aside>
 </section>
 
@@ -1289,23 +1289,24 @@ The viewport transformation takes the normalized device coordinates, which are t
 <!-- the camera matrix: what K and [R | t] mean -->
 <section>
   <h1 class="title">The Camera Matrix in Computer Vision</h1>
-  <img class="abs" src="./assets/camera_model-CEtxYslN.svg" alt="A house, the ray from its corner X to the camera center, the image plane with the house's image, the pixel (x, y), the image center and the focal length f" style="left:20px; top:205px; width:1000px; height:600px">
-  <ul class="abs bullets" style="left:1050px; top:225px; width:840px; font-size:46px">
-    <li>From a 3D point to a pixel, in two steps:</li>
+  <img class="abs" src="./assets/camera_model-CEtxYslN.svg" alt="A house, the ray from its corner X to the camera center, the image plane with the house's image, the pixel (x, y), the image center and the focal length f" style="left:950px; top:205px; width:900px; height:540px">
+  <ul class="abs bullets" style="left:50px; top:225px; width:850px; font-size:46px">
+    <li>From a 3D point to a pixel:</li>
     <li class="sub"><span class="mr">[<i>R</i> | <b>t</b>]</span>, the <i>extrinsics</i>: where the camera is and where it points (the view matrix)</li>
     <li class="sub"><span class="mr"><i>K</i></span>, the <i>intrinsics</i>: the lens and the sensor</li>
+    <li class="sub">divide by the third coordinate</li>
   </ul>
-  <div class="abs eq" data-scale="4.5" data-tex="K=\begin{bmatrix}f&amp;0&amp;c_x\\0&amp;f&amp;c_y\\0&amp;0&amp;1\end{bmatrix}" style="left:1050px; width:840px; top:545px; text-align:center"></div>
-  <div class="abs caption gray" style="left:1050px; width:840px; top:735px; font-size:36px; line-height:1.3"><span class="mr"><i>f</i></span>: the focal length, in pixels (the zoom)<br><span class="mr">(<i>c<sub>x</sub></i>, <i>c<sub>y</sub></i>)</span>: the image center</div>
-  <div class="abs eq" data-scale="5" data-tex="P=K\,[\,R\mid\mathbf t\,]" style="left:20px; width:1000px; top:840px; text-align:center"></div>
-  <div class="abs caption" style="left:20px; width:1000px; top:935px; font-size:40px">one 3 × 4 matrix takes a 3D point to its pixel</div>
-  <div class="abs caption gray" style="left:1050px; width:840px; top:880px; font-size:36px; line-height:1.3">The graphics pipeline without depth:<br>graphics keeps <span class="mr"><i>z</i></span> only for the z-buffer</div>
+  <div class="abs eq" data-scale="4.5" data-tex="K=\begin{bmatrix}f&amp;0&amp;c_x\\0&amp;f&amp;c_y\\0&amp;0&amp;1\end{bmatrix}" style="left:50px; width:850px; top:625px; text-align:center"></div>
+  <div class="abs caption gray" style="left:50px; width:850px; top:810px; font-size:36px; line-height:1.3"><span class="mr"><i>f</i></span>: the focal length, in pixels (the zoom)<br><span class="mr">(<i>c<sub>x</sub></i>, <i>c<sub>y</sub></i>)</span>: the image center</div>
+  <div class="abs eq" data-scale="4.5" data-tex="\begin{bmatrix}u\\v\\w\end{bmatrix}=\underbrace{K\,[\,R\mid\mathbf t\,]}_{P\;(3\times4)}\begin{bmatrix}X\\Y\\Z\\1\end{bmatrix}\qquad\begin{aligned}x&amp;=u/w\\y&amp;=v/w\end{aligned}" style="left:900px; width:1000px; top:790px; text-align:center"></div>
+  <div class="abs caption" style="left:900px; width:1000px; top:700px; font-size:40px">one 3 × 4 matrix and a division take a 3D point to its pixel</div>
+  <div class="abs caption gray" style="left:50px; width:850px; top:945px; font-size:36px; line-height:1.3">The graphics pipeline without depth:<br>graphics keeps <span class="mr"><i>z</i></span> only for handling occlusion</div>
   <aside class="notes">
-Computer vision describes the same camera with a different vocabulary. A world point X reaches a pixel in two steps. First, [R | t] expresses the point in the camera's own frame: the rotation R and the translation t say where the camera is and where it points. This is exactly the view matrix (its top three rows), and these are called the extrinsic parameters. Second, K, the intrinsic matrix, describes the lens and the sensor: f is the focal length measured in pixels (zooming in increases it), and (c_x, c_y) is the image center, the pixel where the optical axis meets the image. In the figure, the ray from X to the camera center crosses the image plane at the pixel (x, y).
+Computer vision describes the same camera with a different vocabulary. A world point X reaches a pixel in three steps. First, [R | t] expresses the point in the camera's own frame: the rotation R and the translation t say where the camera is and where it points. This is exactly the view matrix (its top three rows), and these are called the extrinsic parameters. Second, K, the intrinsic matrix, describes the lens and the sensor: f is the focal length measured in pixels (zooming in increases it), and (c_x, c_y) is the image center, the pixel where the optical axis meets the image. Third, K [R | t] applied to [X Y Z 1]ᵀ gives a homogeneous image point [u v w]ᵀ, with w the depth along the optical axis, and the pixel is (x, y) = (u/w, v/w): the division by depth that makes it a perspective projection. In the figure, the ray from X to the camera center crosses the image plane at the pixel (x, y).
 
-Together, P = K [R | t] is a 3 × 4 matrix that takes a 3D point (in homogeneous coordinates) to its pixel (divide by the third coordinate, as always). It has 11 degrees of freedom: 6 for the pose (3 for the rotation, 3 for the position) and 5 for K in general (the two focal lengths may differ if the pixels are not square, and a skew term, which is zero for real sensors).
+Together, P = K [R | t] is a 3 × 4 matrix that takes a 3D point (in homogeneous coordinates) to its pixel, up to the division by the third coordinate. It has 11 degrees of freedom: 6 for the pose (3 for the rotation, 3 for the position) and 5 for K in general (the two focal lengths may differ if the pixels are not square, and a skew term, which is zero for real sensors).
 
-The connection with the graphics pipeline: multiply the viewport transformation by the perspective projection matrix of a symmetric frustum and apply it to eye coordinates. The x, y and w rows are the camera matrix (f = (W/2) cot(θ/2) for an image W pixels wide with field of view θ; the image center is the middle of the viewport); the remaining row computes depth, which graphics keeps for the z-buffer and a camera does not need. The two fields use different conventions (graphics: the camera looks down −z and image y points up; vision: the camera looks down +z and image y points down); recitation 3 goes through them.
+The connection with the graphics pipeline: multiply the viewport transformation by the perspective projection matrix of a symmetric frustum and apply it to eye coordinates. The x, y and w rows are the camera matrix (f = (W/2) cot(θ/2) for an image W pixels wide with field of view θ; the image center is the middle of the viewport); the remaining row computes depth, which graphics keeps for handling occlusion and a camera does not need. The two fields use different conventions (graphics: the camera looks down −z and image y points up; vision: the camera looks down +z and image y points down); recitation 3 goes through them.
   </aside>
 </section>
 
