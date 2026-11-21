@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rasterization, Visibility, and Texturing</title>
+  <link rel="icon" href="data:,">
+  <script type="module" crossorigin src="./assets/rasterization-tmUlg_B9.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/view3d-jKIGT8G8.js">
+  <link rel="stylesheet" crossorigin href="./assets/view3d-D7SW_Fiv.css">
+</head>
+<body>
+<!-- Week 7. Figures: tools/make_w7_figures.py. Positions are slide pixels on the 1920 x 1080 canvas. -->
+<div class="reveal">
+<div class="slides">
+
+<!-- part 1 -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Rasterization and Visibility</div>
+</section>
+
+<section>
+  <h1 class="title">Representing 3D Objects</h1>
+  <img class="abs" src="./assets/rep_mesh-DkPM3DnF.png" alt="A torus as a mesh of triangles" style="left:170px; top:195px; width:400px; height:275px">
+  <div class="abs caption" style="left:80px; width:580px; top:480px">Triangle mesh</div>
+  <div class="abs caption gray" style="left:80px; width:580px; top:530px">the most common</div>
+  <img class="abs" src="./assets/rep_parametric-BBfJEqu9.png" alt="A smooth torus with curves of constant u and constant v" style="left:760px; top:195px; width:400px; height:275px">
+  <div class="abs caption" style="left:670px; width:580px; top:480px">Parametric surface</div>
+  <div class="abs caption gray" style="left:670px; width:580px; top:530px"><span class="mr">(<i>u</i>, <i>v</i>) ↦ (<i>x</i>, <i>y</i>, <i>z</i>)</span></div>
+  <img class="abs" src="./assets/rep_implicit-BBQnl5IU.png" alt="Three spheres blended smoothly into one surface" style="left:1350px; top:195px; width:400px; height:275px">
+  <div class="abs caption" style="left:1260px; width:580px; top:480px">Implicit surface</div>
+  <div class="abs caption gray" style="left:1260px; width:580px; top:530px"><span class="mr"><i>f</i>(<i>x</i>, <i>y</i>, <i>z</i>) = 0</span></div>
+  <img class="abs" src="./assets/rep_points-UuF7BhwG.png" alt="A torus as a cloud of points" style="left:170px; top:590px; width:400px; height:275px">
+  <div class="abs caption" style="left:80px; width:580px; top:875px">Point cloud</div>
+  <div class="abs caption gray" style="left:80px; width:580px; top:925px">samples of the surface</div>
+  <img class="abs" src="./assets/rep_voxels-BdtafmNH.png" alt="A torus made of cubes on a grid" style="left:760px; top:590px; width:400px; height:275px">
+  <div class="abs caption" style="left:670px; width:580px; top:875px">Voxels</div>
+  <div class="abs caption gray" style="left:670px; width:580px; top:925px">a 3D grid of cells</div>
+  <img class="abs" src="./assets/rep_csg-C0SnU1W8.png" alt="A rounded cube with three cylindrical holes" style="left:1350px; top:590px; width:400px; height:275px">
+  <div class="abs caption" style="left:1260px; width:580px; top:875px">Constructive solid geometry</div>
+  <div class="abs caption gray" style="left:1260px; width:580px; top:925px">(cube ∩ sphere) − cylinders</div>
+  <aside class="notes">
+Most representations describe the surface of an object, since that is what we see. Some describe the solid, its inside as well.
+
+Triangle mesh: the surface approximated by flat triangles. By far the most common, and what GPUs draw. The next slide is about meshes.
+
+Parametric surface: a function from two parameters to 3D points, (u, v) ↦ (x, y, z). The curves drawn on the torus are the curves of constant u and of constant v. For this torus, x = (R + r cos v) cos u, y = r sin v, z = (R + r cos v) sin u. The surface is smooth and exact, not an approximation. Design programs use patches of polynomial surfaces of this kind (Bézier and spline patches).
+
+Implicit surface: the points where a function f(x, y, z) is zero, with f < 0 inside and f > 0 outside. Testing whether a point is inside is a single evaluation, and shapes blend into each other easily: here three spheres merge into one smooth surface. The torus is also an implicit surface: (√(x² + z²) − R)² + y² − r² = 0.
+
+Point cloud: points sampled on the surface, with no connections between them. This is what 3D scanners and depth cameras produce.
+
+Voxels: a 3D grid of cells, each inside or outside, or holding a value such as a density. It is a 3D image, and the natural output of CT and MRI scanners. Memory grows with the cube of the resolution.
+
+Constructive solid geometry: solids built from simple ones by union, intersection and difference. Here: a cube intersected with a sphere, minus three cylinders along the axes. Common in mechanical design.
+
+Rasterization draws triangles, so other representations are converted to meshes before rendering. Ray tracing (week 12) can intersect many of them directly.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Triangle Meshes</h1>
+  <img class="abs" src="./assets/meshes-DWRMr85n.svg" alt="The same sphere as two flat-shaded triangle meshes: 80 triangles and 1280 triangles" style="left:70px; top:235px; width:850px; height:400px">
+  <div class="abs caption" style="left:80px; width:400px; top:655px">80 triangles</div>
+  <div class="abs caption" style="left:530px; width:400px; top:655px">1280 triangles</div>
+  <ul class="abs bullets" style="left:1010px; top:250px; width:860px">
+    <li>An object is represented by its surface, approximated by a mesh of triangles</li>
+    <li>A list of vertices: 3D points</li>
+    <li>A list of triangles: each is three indices into the vertex list</li>
+    <li>Neighboring triangles share vertices and edges</li>
+  </ul>
+  <pre class="abs code" style="left:240px; top:820px">vertices  = [(x0, y0, z0), (x1, y1, z1), (x2, y2, z2), ...]
+triangles = [(0, 1, 2), (0, 2, 3), ...]</pre>
+  <aside class="notes">
+For rendering, an object is described by its boundary surface: what we see is the surface, not the inside. The surface is approximated by a mesh of triangles, finer where more accuracy is needed. Both spheres here approximate the same sphere: the more triangles, the closer the approximation, and the less visible the facets.
+
+A mesh is stored as two lists. The vertex list holds each 3D point once. The triangle list refers to the vertices by their index in that list, so a vertex shared by six triangles is stored, and transformed, only once. The order of the three indices also fixes the orientation of the triangle, which we will use for back-face culling.
+
+Vertices carry more than positions: a normal, a color, texture coordinates. These are the attributes that we interpolate across each triangle later today.
+
+Why triangles? Three points always lie in a plane, a triangle is always convex, any polygon can be split into triangles, and the barycentric coordinates of week 2 interpolate across a triangle. Besides points and lines, triangles are the only thing a GPU draws.
+
+In the recitation: a mesh file format (OBJ), and the normals of faces and vertices.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">From Triangles to Pixels</h1>
+  <img class="abs" src="./assets/pipeline-DtVf-y5f.svg" alt="Vertices, transformations, rasterization, per-pixel work, frame buffer" style="left:60px; top:215px; width:1800px; height:300px">
+  <ul class="abs bullets" style="left:330px; top:580px; width:1300px">
+    <li>Which pixels does each triangle cover?</li>
+    <li>Which surface is visible at each pixel?</li>
+    <li>What color is it? Texture today, light next week</li>
+  </ul>
+  <aside class="notes">
+In weeks 2 and 3 we took each vertex from object coordinates to raster coordinates, keeping its depth. Everything after that is the subject of today and next week. The image formation model is the thread again: a camera forms an image by projecting the scene, and here we compute that image, one pixel at a time.
+
+Today has two parts: rasterization and visibility (which pixels, and which surface), and texture mapping (the first half of what color). Next week is light and shading, the second half.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Visible-Surface Algorithms</h1>
+  <ul class="abs bullets" style="left:250px; top:230px; width:1420px">
+    <li>Given a set of 3D objects and a viewing specification, determine which surfaces of the objects should be visible</li>
+  </ul>
+  <img class="abs" src="./assets/precision_image-DtzCWYT5.svg" alt="Two overlapping surfaces on a pixel grid: each pixel takes the color of the nearest surface at its center" style="left:172px; top:405px; width:688px; height:428px">
+  <img class="abs" src="./assets/precision_object-DosJt8n5.svg" alt="The same two surfaces as exact polygons: the hidden edges of the back triangle are dashed" style="left:1060px; top:405px; width:688px; height:428px">
+  <div class="abs caption" style="left:116px; width:800px; top:850px"><i>Image precision</i></div>
+  <div class="abs caption gray" style="left:116px; width:800px; top:902px">what is visible at each pixel?</div>
+  <div class="abs caption" style="left:1004px; width:800px; top:850px"><i>Object precision</i></div>
+  <div class="abs caption gray" style="left:1004px; width:800px; top:902px">which parts of each object are visible?</div>
+  <aside class="notes">
+There are several names by which these algorithms are commonly referred to: visible-line determination, visible-surface determination, hidden-line or hidden-surface removal.
+
+Image-precision: for each pixel in the image, determine which part of which object is pierced by the projector closest to the viewer, and assign the pixel the appropriate color. These algorithms were motivated by raster devices.
+
+Object-precision: for each object, determine which parts are unobstructed by itself or by other objects, and scan-convert these parts using the appropriate color. The advantage is independence from the resolution: it is easy to change the resolution of the image once the visible parts have been determined.
+
+The figures show the same two surfaces, the gray quad in front of the tan triangle, solved both ways. Left: each pixel takes the color of the nearest surface at its center; the answer is a set of pixels, with staircase edges, and a different resolution means solving again. Right: the visible part of the triangle is computed as exact geometry, and its hidden edges (dashed) are removed; the result can then be drawn at any resolution.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Ray Casting</h1>
+  <ul class="abs bullets" style="left:60px; top:240px; width:980px">
+    <li>For each pixel, generate the ray from the center of projection through the pixel</li>
+    <li>To find the surface visible through the pixel:
+    </li>
+    <li class="sub">Intersect the ray with all surfaces in the scene</li>
+    <li class="sub">Keep the intersection closest to the center of projection</li>
+    <li>Works with any representation we can intersect with a ray</li>
+    <li>Complexity: <span class="mr">O(<i>pN</i>)</span>, for <span class="mr"><i>p</i></span> pixels and <span class="mr"><i>N</i></span> primitives</li>
+  </ul>
+  <img class="abs" src="./assets/raycast-CtXJm2fQ.svg" alt="A ray from the eye through one pixel of the screen, hitting a sphere" style="left:1060px; top:240px; width:820px; height:620px">
+  <aside class="notes">
+Ray casting shows that the visible-surface problem is a sorting problem: sorting surfaces along all possible lines of sight.
+
+Ray casting needs only one operation from the scene: intersect a ray with a primitive. So it works directly with any representation that supports it: triangles, but also spheres and other implicit surfaces, parametric patches, voxel grids and CSG solids, with no conversion to triangles.
+
+It is simple, and rather slow as it stands. It loops over the pixels, of which there are many, and for each pixel it intersects a ray with possibly all of the objects, of which there are also many. It does not use any coherence between neighboring pixels.
+
+In week 12 we extend this algorithm to ray tracing, and see how to make it more efficient.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Same Problem, Loops Exchanged</h1>
+  <div class="abs caption" style="left:60px; width:860px; top:240px">Ray casting</div>
+  <div class="abs caption" style="left:1000px; width:860px; top:240px">Rasterization</div>
+  <pre class="abs code" style="left:60px; top:330px">for each pixel:
+    make the ray through the pixel
+    for each triangle in the scene:
+        intersect it with the ray
+        if the hit is closest so far:
+            keep it</pre>
+  <pre class="abs code" style="left:1000px; top:330px">for each triangle in the scene:
+    project it onto the screen
+    for each pixel it covers:
+        if it is the closest so far:
+            keep it</pre>
+  <ul class="abs bullets" style="left:250px; top:700px; width:1420px">
+    <li>Both find, at each pixel, the nearest surface</li>
+    <li>Rasterization only visits the pixels each triangle covers, and one triangle at a time is all it needs in memory</li>
+    <li>What is the complexity of rasterization?</li>
+  </ul>
+  <aside class="notes">
+Both loops do the same work in the same two nested dimensions, pixels and triangles. Only the order differs.
+
+In the worst case, with every triangle covering every pixel, both are O(pN). The difference is in the typical case. Most triangles of a modern scene cover few pixels, and the rasterizer's work is the total number of pixels covered, summed over the triangles. That is p times the average number of surfaces stacked behind a pixel, which is usually small. Ray casting without further acceleration still tests every triangle at every pixel.
+
+The price: the inner loop needs to remember, at each pixel, the closest surface so far, which is the z-buffer, coming up. And since the rasterizer sees one triangle at a time, effects that need other objects (shadows, reflections) are hard for it and natural for ray tracing.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Inside Test</h1>
+  <div class="demo" data-demo="inside" data-mode="inside" data-grid="50,210,30,20,30"></div>
+  <div class="abs demo choices in-show" style="left:50px; top:820px; width:900px; justify-content:center" data-prevent-swipe>
+    <button data-value="ab"><span class="mr"><i>E<sub>ab</sub></i></span></button>
+    <button data-value="bc"><span class="mr"><i>E<sub>bc</sub></i></span></button>
+    <button data-value="ca"><span class="mr"><i>E<sub>ca</sub></i></span></button>
+    <button data-value="all">all three</button>
+  </div>
+  <div class="abs caption in-readout" style="left:50px; width:900px; top:900px; font-size:42px"></div>
+  <div class="abs caption gray in-verdict" style="left:50px; width:900px; top:965px"></div>
+  <ul class="abs bullets" style="left:1010px; top:230px; width:860px">
+    <li>A pixel is covered when its center is inside the triangle</li>
+    <li>The <i>edge function</i> of edge <span class="mr"><b>ab</b></span>:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="E_{ab}(\mathbf p)=(\mathbf b-\mathbf a)\times(\mathbf p-\mathbf a)" style="left:1010px; width:860px; top:490px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:600px; width:860px">
+    <li>Its sign says on which side of the line <span class="mr"><b>p</b></span> lies</li>
+    <li>Inside: all three edge functions have the same sign</li>
+  </ul>
+  <aside class="notes">
+The 2D cross product (b − a) × (p − a) = (b_x − a_x)(p_y − a_y) − (b_y − a_y)(p_x − a_x) is the implicit equation of the line through a and b: zero on the line, positive on one side, negative on the other. The name edge function is from Pineda (1988).
+
+A triangle is the intersection of three half-planes, so a point is inside exactly when it is on the inner side of all three lines. For a counterclockwise triangle all three functions are then positive; for a clockwise one, all negative.
+
+Demo: drag a, b, c and p. The buttons show the half-plane of each edge function, with arrows for its two vectors (blue: the edge, b − a; red: the point, p − a), and all three together, which leaves the pixels whose centers are inside. Note that a pixel is either covered or not: a pixel with only a corner in the triangle is not drawn. We come back to this when we discuss antialiasing.
+
+Where is the pixel center? Pixel (i, j) is the square [i, i+1] × [j, j+1] of the screen, so its center, where we sample, is (i + ½, j + ½). The edge functions work at any point; the convention matters for agreeing with the rest of the pipeline. With it, a rectangle from (0, 0) to (10, 10) covers exactly 10 × 10 pixels, its area, and no sample falls on its boundary. Sampling at integer points would put samples exactly on all four of its edges, and the tie rule would decide between 10 and 11 pixels in each direction. Textures use the same convention for texel centers. When Direct3D 9 put pixel centers at integers while OpenGL used half-integers, programs ported between the two came out shifted by half a pixel; Direct3D 10 adopted the half-integer convention.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Rasterization Loop</h1>
+  <pre class="abs code" style="left:200px; top:260px">for each pixel center p = (x + 0.5, y + 0.5) in the bounding box:
+    if E_ab(p), E_bc(p), E_ca(p) all have the same sign:
+        draw pixel (x, y)</pre>
+  <ul class="abs bullets" style="left:250px; top:520px; width:1420px">
+    <li>Each edge function is <i>linear</i> in <span class="mr"><i>x</i></span> and <span class="mr"><i>y</i></span>: three coefficients per edge, fixed for the triangle</li>
+    <li>So a whole block of pixels can be evaluated at once</li>
+    <li>This is how GPUs work: many pixels in parallel, not one by one</li>
+  </ul>
+  <aside class="notes">
+Since E is linear in x and y, E_ab(x, y) = A x + B y + C with coefficients computed once per triangle. Early hardware used this to step along scan lines: moving one pixel to the right just adds a constant, E(x + 1, y) = E(x, y) − (b_y − a_y).
+
+Modern GPUs use the same linearity differently. They evaluate the functions over a block of pixels at once, by adding fixed offsets to one value, and they can test a tile's corners to accept or reject the whole tile. In the recitation you do the same thing in NumPy, evaluating E over a whole grid of pixels with one array expression.
+
+The loop on the slide is the definition. Real rasterizers differ in how they organize the same computation.
+
+The loop visits the pixels whose centers lie in the bounding box.
+  </aside>
+</section>
+
+<section data-visibility="hidden">
+  <h1 class="title">Shared Edges</h1>
+  <img class="abs" src="./assets/shared_edge-DIQBgrR1.svg" alt="Two triangles sharing an edge: each pixel center belongs to exactly one of them" style="left:40px; top:230px; width:1000px; height:611px">
+  <ul class="abs bullets" style="left:1090px; top:270px; width:790px">
+    <li>Meshes are made of triangles that share edges</li>
+    <li>The two triangles see the same edge function, with opposite signs</li>
+    <li>So each pixel center belongs to exactly one of them: no gaps, no double drawing</li>
+    <li>A center exactly on the edge needs a tie-break</li>
+  </ul>
+  <aside class="notes">
+For a shared edge, the neighboring triangle traverses it in the opposite direction, so E_ba(p) = −E_ab(p). A pixel center is on one side or the other, and belongs to that triangle only. This matters for meshes: a gap would show the background through the surface, and a pixel drawn twice would be visible with transparency.
+
+The exception is a center lying exactly on the edge, where E = 0. Rasterizers break the tie with a fixed rule, usually called the top-left rule: a pixel on an edge is drawn only if that edge is a top or a left edge of the triangle.
+
+The alternative of drawing the edges with a line algorithm and filling between them does not have this property: it colors pixels whose centers are outside the triangle, and neighboring triangles overlap.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Barycentric Coordinates</h1>
+  <div class="demo" data-demo="inside" data-mode="bary" data-grid="50,210,30,20,30"></div>
+  <div class="abs caption in-readout" style="left:50px; width:900px; top:830px"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="\mathbf p=\alpha\mathbf a+\beta\mathbf b+\gamma\mathbf c,\quad\alpha+\beta+\gamma=1" style="left:1000px; width:880px; top:240px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:340px; width:860px">
+    <li>Inside the triangle: all three are positive</li>
+    <li>Each is a ratio of areas, and <span class="mr"><i>E</i></span> is twice a signed area:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="\alpha=\frac{E_{bc}(\mathbf p)}{A},\quad\beta=\frac{E_{ca}(\mathbf p)}{A},\quad\gamma=\frac{E_{ab}(\mathbf p)}{A}" style="left:1000px; width:880px; top:565px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="A=E_{ab}(\mathbf c)" style="left:1000px; width:880px; top:700px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:800px; width:860px">
+    <li>The same three numbers give the inside test and the weights</li>
+  </ul>
+  <aside class="notes">
+These are the weights of the point p as a combination of the vertices, the affine combination of week 2. E_ab(p) is twice the signed area of the triangle a, b, p, so γ is the area of the small triangle opposite c, as a fraction of the whole. Move p to c: γ becomes 1, and the other two 0.
+
+They are computed at no extra cost, since the inside test has already computed the three edge functions. Dividing by A gives the weights, and their signs are the inside test.
+
+Demo: drag p and the vertices. Each small triangle's area is the weight of the opposite vertex. Move p outside the triangle: one of the weights becomes negative.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Interpolating Attributes</h1>
+  <div class="demo" data-demo="inside" data-mode="color" data-grid="50,210,30,20,30"></div>
+  <ul class="abs bullets" style="left:1010px; top:240px; width:860px">
+    <li>Vertices carry attributes: color, texture coordinates, normals, depth</li>
+    <li>Between the vertices, weigh them:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.6" data-tex="f(\mathbf p)=\alpha f_a+\beta f_b+\gamma f_c" style="left:1000px; width:880px; top:510px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:620px; width:860px">
+    <li>Linear on the screen</li>
+    <li>Is this the right thing to do?</li>
+  </ul>
+  <aside class="notes">
+This is what a rasterizer does at each pixel it covers: compute α, β and γ, and combine the vertices' values. The figure interpolates three vertex colors.
+
+Next week the same mechanism gives Gouraud and Phong shading, by interpolating colors or normals.
+
+Demo: drag the vertices. On a flat 2D triangle this is exactly right. It is not right for a triangle that recedes from the eye, as the next slides show.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Equal Steps on the Screen</h1>
+  <img class="abs" src="./assets/screen_steps-7MCfI3f7.svg" alt="Rays from the eye through equally spaced pixels hit a receding segment at unequal spacing" style="left:210px; top:215px; width:1500px; height:580px">
+  <ul class="abs bullets" style="left:250px; top:830px; width:1420px">
+    <li>Halfway between <span class="mr"><b>a</b></span> and <span class="mr"><b>b</b></span> on the screen is not halfway on the surface</li>
+  </ul>
+  <aside class="notes">
+Perspective projection preserves straight lines but not ratios along them: it maps lines to lines, but it does not preserve the midpoint. Equal steps on the screen correspond to larger and larger steps on the surface as it recedes. So a quantity that varies linearly along the surface does not vary linearly on the screen.
+
+Barycentric coordinates computed on the screen are the weights of the projected triangle. They are not the weights of the same point on the 3D triangle.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Artifact</h1>
+  <div class="demo" data-demo="persp" data-panels="40,205,40,2.25"></div>
+  <div class="abs caption" style="left:40px; width:900px; top:885px">Linear on the screen</div>
+  <div class="abs caption" style="left:980px; width:900px; top:885px">Perspective-correct</div>
+  <div class="abs demo" style="left:460px; top:955px; width:1000px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-tilt" style="width:230px"></span><input type="range" name="tilt" min="0" max="72" step="1" value="58"></div>
+  </div>
+  <aside class="notes">
+Computed live: the same square, two triangles, with the same texture coordinates at its four corners. On the left, the coordinates are interpolated with the screen's barycentric coordinates. The checkerboard bends along the diagonal shared by the two triangles, because each triangle is correct at its own three vertices only. On the right, the correction of the next slide.
+
+Demo: with no tilt the two agree, since all vertices are at the same depth. Tilt the square: the bend grows. Early game consoles without the correction (the PlayStation 1 is the well-known case) showed this wobbling of textures.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Perspective-Correct Interpolation</h1>
+  <ul class="abs bullets" style="left:120px; top:215px; width:1680px">
+    <li>An attribute linear over the triangle is a linear function of the clip coordinates:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.4" data-tex="f=k_1x+k_2y+k_3w" style="left:0; width:1920px; top:300px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:400px; width:1680px">
+    <li>Divide by <span class="mr"><i>w</i></span>: linear in the screen coordinates <span class="mr"><i>x</i>/<i>w</i>, <i>y</i>/<i>w</i></span></li>
+  </ul>
+  <div class="abs eq" data-scale="4.4" data-tex="\frac{f}{w}=k_1\frac{x}{w}+k_2\frac{y}{w}+k_3" style="left:0; width:1920px; top:480px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:615px; width:1680px">
+    <li>The same for <span class="mr"><i>f</i> = 1</span>: <span class="mr">1/<i>w</i></span> is linear on the screen too. So interpolate both, and divide:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="f=\frac{\alpha f_a/w_a+\beta f_b/w_b+\gamma f_c/w_c}{\alpha/w_a+\beta/w_b+\gamma/w_c}" style="left:0; width:1920px; top:770px; text-align:center"></div>
+  <aside class="notes">
+Why does the first line hold? The three vertices of the triangle, as (x, y, w) in clip coordinates, are three linearly independent vectors (unless the triangle is seen exactly edge-on). So there is exactly one linear function k₁x + k₂y + k₃w taking the prescribed values f_a, f_b, f_c at the vertices, and since the points of the triangle are combinations of its vertices, it gives the attribute everywhere on the triangle.
+
+Dividing by w turns x and y into the screen coordinates and leaves a function that is linear on the screen: this is the whole trick. So f/w can be interpolated with the barycentric coordinates computed on the screen, and so can 1/w, the special case f = 1. Their ratio recovers f.
+
+Here w is the fourth clip coordinate; with the projection matrix of week 3, w = −z_eye, the distance along the viewing direction. This is why the graphics pipeline keeps w around after the projection.
+
+Check at a vertex: at p = a we have α = 1, and the formula gives (f_a/w_a)/(1/w_a) = f_a. If all three w are equal, it reduces to the plain interpolation of the previous slides. It is always done by the GPU; you implement it in the recitation.
+  </aside>
+</section>
+
+<section data-visibility="hidden">
+  <h1 class="title">Depth Needs No Correction</h1>
+  <ul class="abs bullets" style="left:120px; top:230px; width:1680px">
+    <li>The same argument for <span class="mr"><i>f</i> = <i>z</i><sub>clip</sub></span> shows that <span class="mr"><i>z</i><sub>ndc</sub> = <i>z</i><sub>clip</sub>/<i>w</i></span> is linear on the screen:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="z_{\mathrm{ndc}}=\alpha z_a+\beta z_b+\gamma z_c" style="left:0; width:1920px; top:330px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:460px; width:1680px">
+    <li>Planes stay planes after the projection (week 3): <span class="mr"><i>Ax</i> + <i>By</i> + <i>Cz</i> + <i>D</i> = 0</span> in normalized device coordinates, so</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="z(x,y)=-\frac{Ax+By+D}{C}" style="left:0; width:1920px; top:610px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:770px; width:1680px">
+    <li>This holds for <span class="mr"><i>z</i><sub>ndc</sub></span> only; <span class="mr"><i>z</i><sub>eye</sub></span> is not linear on the screen, but its reciprocal is</li>
+  </ul>
+  <aside class="notes">
+So the z values that the projection matrix computed have a useful property, on top of the monotonicity we saw in week 3: they are linear on the screen, so they can be interpolated directly and cheaply, with no division.
+
+Traditionally this was done incrementally along scan lines: at (x + 1, y), z′ = −(A(x + 1) + By + D)/C = z − A/C. Since A/C is constant for the plane, one subtraction per pixel suffices, and going to the next scan line subtracts B/C. The depth is linear in x and y either way. That is the essential fact, and today's hardware uses it by evaluating blocks of pixels at once.
+
+Be careful about which z: it has to be the one after the projection. Since 1/z_eye is linear on the screen, z_eye itself is not, and this is another view of the same nonlinearity we plotted in week 3: z_ndc = (f + n)/(f − n) + 2fn/((f − n) z_eye), a linear function of 1/z_eye.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Back-Face Culling</h1>
+  <ul class="abs bullets" style="left:60px; top:240px; width:930px">
+    <li>In a closed surface, polygons facing away from the viewer are always hidden, and can be eliminated</li>
+    <li>Back-face test, for <span class="mr"><b>V</b></span> from the eye to the polygon:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="\mathbf V\cdot\mathbf N>0" style="left:60px; width:930px; top:550px; text-align:center"></div>
+  <ul class="abs bullets" style="left:60px; top:650px; width:930px">
+    <li>On the screen: the sign of <span class="mr"><i>A</i></span></li>
+    <li>This solves visibility for a certain class of objects. Which one?</li>
+  </ul>
+  <img class="abs" src="./assets/backface-BwDNRs_E.svg" alt="A convex polygon seen from the eye: faces whose normals point away from the eye are dashed" style="left:1010px; top:240px; width:900px; height:620px">
+  <aside class="notes">
+Why it is worth doing: about half of the polygons of a closed object face away, so culling removes half of the work before any pixel is touched.
+
+Under perspective, V depends on the polygon: it runs from the eye to a point of the polygon, and it is not a single viewing direction. After the projection the view is parallel, along the z axis of normalized device coordinates (which points away from the eye), so there it is enough to look at the sign of the z component of the normal. Equivalently, and this is what a GPU does: the sign of the signed area A of the projected triangle tells its winding on the screen, counterclockwise or clockwise. It has already been computed for the inside test. This relies on the meshes being modeled with consistent winding.
+
+Answer to the question: convex objects. For a single convex object, every front face is entirely visible, so back-face culling alone solves the problem. For anything else it is only a first step.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Z-Buffer Algorithm (Catmull 1974)</h1>
+  <ul class="abs bullets" style="left:60px; top:240px; width:900px">
+    <li>In addition to the frame buffer, keep a <i style="white-space:nowrap">z-buffer</i> of the same size</li>
+    <li>Invariants:</li>
+    <li class="sub">Each z-buffer pixel holds the depth of the nearest surface drawn so far through that pixel</li>
+    <li class="sub">Each frame buffer pixel holds the color of that surface</li>
+  </ul>
+  <img class="abs" src="./assets/scene_color-CmPnN_8X.png" alt="A rendered scene: a box, a sphere and a cylinder on a floor" style="left:1020px; top:210px; width:560px; height:400px">
+  <img class="abs" src="./assets/scene_depth-D4u69TLT.png" alt="The same scene's depth values, near is dark" style="left:1020px; top:625px; width:560px; height:400px">
+  <div class="abs caption gray" style="left:1600px; width:300px; top:360px; text-align:left">frame buffer</div>
+  <div class="abs caption gray" style="left:1600px; width:300px; top:770px; text-align:left">z-buffer<br>(near is dark)</div>
+  <aside class="notes">
+The z-buffer lets us process one geometric element at a time, doing an amount of work proportional to the number of pixels the element covers. It does not need to compare objects with one another: it only compares each new surface with what is already at the pixel. It was described independently by Catmull and by Straßer in 1974.
+
+The images are computed: a small ray caster gave the scene and its z_ndc values, with near and far planes around the scene.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Z-Buffer Algorithm</h1>
+  <pre class="abs code" style="left:300px; top:250px">set every pixel of the frame buffer to the background
+set every pixel of the z-buffer to the far plane
+
+for each triangle, in any order:
+    for each pixel (x, y) it covers:
+        z = α z_a + β z_b + γ z_c
+        if z &lt; zbuffer(x, y):
+            zbuffer(x, y) = z
+            framebuffer(x, y) = color at (x, y)</pre>
+  <ul class="abs bullets" style="left:300px; top:760px; width:1320px">
+    <li>The order of the triangles does not matter</li>
+    <li>Each pixel is a comparison and at most two writes</li>
+  </ul>
+  <aside class="notes">
+With z_ndc in [−1, 1], the near plane has −1 and the far plane +1, so a smaller value means nearer and the buffer starts at 1. (The value actually stored is usually rescaled to [0, 1] by the viewport transformation.)
+
+Where does the color computation take place? As written, for every pixel that passes the depth test, even if it is overwritten later by something nearer. GPUs commonly test depth before shading, to avoid shading what is already hidden (early z). Many game engines go further with deferred shading: they first run all the geometry to find the visible surface at each pixel, and then shade each pixel just once.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Z-Buffer, Step by Step</h1>
+  <div class="demo" data-demo="zbuffer" data-panels="90,265,60,15"></div>
+  <span class="fragment" data-fragment-index="1"></span>
+  <span class="fragment" data-fragment-index="2"></span>
+  <span class="fragment" data-fragment-index="3"></span>
+  <div class="abs caption" style="left:90px; width:840px; top:200px">frame buffer</div>
+  <div class="abs caption" style="left:990px; width:840px; top:200px">z-buffer (near is dark)</div>
+  <div class="abs caption z-drawn" style="left:90px; width:900px; top:855px; text-align:left"></div>
+  <div class="abs demo choices z-order" style="left:990px; top:845px" data-prevent-swipe>
+    <button data-value="ABC">A, B, C</button><button data-value="CBA">C, B, A</button><button data-value="BCA">B, C, A</button>
+  </div>
+  <aside class="notes">
+Computed live, with big pixels so you can see them. Triangles A (light), B (dark) and C (tan) go in one per step (arrow keys); A and B cross each other. The depth is interpolated across each triangle, and the panel on the right shows it.
+
+Demo: try the other orders with the buttons. The partial pictures differ, the final one does not. Note the boundary where A and B cross: no polygon has an edge there. It appears by itself, pixel by pixel, with no need to split the triangles. An algorithm that orders whole polygons cannot do this.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Z-Buffer Algorithm</h1>
+  <ul class="abs bullets" style="left:250px; top:260px; width:1420px">
+    <li>Advantages:</li>
+    <li class="sub">Simple to implement, in software and in hardware</li>
+    <li class="sub">Handles intersecting surfaces with no special cases</li>
+    <li class="sub">Separately rendered images can be composited using their z-buffers</li>
+    <li>Disadvantages:</li>
+    <li class="sub">Requires extra memory (not so much of a problem anymore)</li>
+    <li class="sub">Finite depth precision can cause problems</li>
+    <li class="sub">May spend time on polygons that are not visible in the image</li>
+  </ul>
+  <aside class="notes">
+What is the complexity of the z-buffer algorithm? The work per polygon is proportional to the number of pixels it covers on the screen, so the total is the sum of the covered pixels over all polygons. In the worst case, with every polygon covering the whole screen, this is O(pN), the same as ray casting. In practice polygons are small, and the sum is p times the average number of surfaces behind a pixel. That number, the depth complexity, is what the last disadvantage is about: pixels that get overwritten are wasted work. The price of the algorithm is paid per pixel covered, not per pixel times polygon.
+
+Transparency is another limitation: a single depth per pixel cannot represent a stack of translucent surfaces. We return to this at the end of the lecture.
+  </aside>
+</section>
+
+<section data-visibility="hidden">
+  <h1 class="title">Z-Fighting</h1>
+  <div class="demo" data-demo="zfight" data-panel="40,210,2.4"></div>
+  <div class="abs caption" style="left:40px; width:1008px; top:940px; font-size:40px">Two parallel walls, 24-bit depth values</div>
+  <div class="abs demo" style="left:1110px; top:230px; width:760px" data-prevent-swipe>
+    <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px"><span class="lab lab-n" style="width:auto"></span><input type="range" name="n" min="-3" max="1" step="0.01"></div>
+    <div class="slider-row hom-slider" style="flex-direction:column; align-items:flex-start; gap:4px; margin-top:30px"><span class="lab lab-f" style="width:auto"></span><input type="range" name="f" min="2" max="4" step="0.01"></div>
+  </div>
+  <div class="abs zf-step" style="left:1110px; top:530px; width:760px; font-size:44px; line-height:1.25"></div>
+  <div class="abs eq" data-scale="4.6" data-tex="\Delta d\approx2^{-24}\,\frac{(f-n)\,d^2}{fn}" style="left:1110px; width:760px; top:690px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1110px; top:850px; width:760px">
+    <li>Bring the near plane out first</li>
+  </ul>
+  <aside class="notes">
+Back to the plot of the nonlinear z mapping from week 3. A depth buffer stores a finite number of values, here 2²⁴. Because of the nonlinearity most of them are spent close to the eye, and at distance d two surfaces closer than about Δd round to the same value and can no longer be told apart. The result is z-fighting: bands of the far surface showing through the near one, and flickering as the camera moves.
+
+The figure is computed with the actual quantization: the back wall (red) is drawn first, and the front wall (light stripes) replaces it only where its stored depth is strictly smaller. The readout gives both numbers at distance 500: a depth difference smaller than the depth step cannot be resolved. (The walls are 0.03 apart. Seen at a grazing angle, their depths along a line of sight differ by more than that.)
+
+Demo: with the near plane at 0.1 the far part of the wall breaks into red bands. Move n to the right: the bands disappear. Now move the far plane: it hardly changes the depth step, as long as f ≫ n (it only clips the wall). The formula says why: for f ≫ n, Δd ≈ 2⁻²⁴ d²/n, inversely proportional to n and independent of f. So set the near plane as far from the eye as the scene allows.
+
+Other remedies: avoid truly coplanar surfaces, or give one surface a small depth offset (a polygon offset), the usual approach for decals. Many engines today store depth reversed, in floating point, which spreads the precision much more evenly.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">List-Priority Algorithms</h1>
+  <ul class="abs bullets" style="left:250px; top:290px; width:1420px">
+    <li>Determine an ordering of the objects such that drawing them in that order gives a correct picture</li>
+    <li>Example: <i>painter’s algorithm</i>. If all of the polygons are sorted by depth, drawing them back to front gives the correct result</li>
+    <li>Question: does a depth ordering always exist?</li>
+  </ul>
+  <aside class="notes">
+Optional, through the BSP slides.
+
+These are object-precision methods: they work with the polygons, not with the pixels. Each polygon drawn overwrites what is behind it, like a painter who paints the far objects first. No depth buffer is needed.
+
+The idea returns at the end of this lecture: translucent surfaces have to be drawn back to front, even on a GPU with a z-buffer.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Depth Ordering</h1>
+  <img class="abs" src="./assets/depth_order-DizgkL1I.svg" alt="Three pairs of polygons with a valid depth order; below, two polygons that occlude each other, and three in a cyclic overlap" style="left:383px; top:225px; width:1153px; height:820px">
+  <aside class="notes">
+Optional.
+
+In the three top examples, there is a valid depth ordering (with the projection parallel to the z axis). On the left, the extents of the two polygons along the z axis are disjoint, so they can be sorted unambiguously. In the middle, the z extents overlap, but the x extents do not, so the projections are disjoint. Neither can be classified as nearer than the other, and that is no problem: we can draw them in any order we like. On the right, both the z extents and the projections overlap. However, there is a plane that separates the two polygons. The polygon on the same side of that plane as the eye cannot possibly be occluded by the one on the other side, so we can define a correct order.
+
+In the two bottom cases no depth ordering is possible: the polygons interpenetrate, or they occlude each other in a cycle. The solution is to split some of the polygons involved, to reduce the situation to one of the top cases.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Planar Separation Principle</h1>
+  <ul class="abs bullets" style="left:120px; top:225px; width:1680px">
+    <li>Let <span class="mr"><i>V</i></span> be a viewpoint and <span class="mr"><i>H</i></span> a plane. An object <span class="mr"><i>A</i></span> entirely on the same side of <span class="mr"><i>H</i></span> as <span class="mr"><i>V</i></span> cannot be occluded by an object <span class="mr"><i>B</i></span> entirely on the opposite side</li>
+  </ul>
+  <img class="abs" src="./assets/planar-CgwQ00Vq.svg" alt="A plane H separates a viewpoint V and object A from object B" style="left:410px; top:400px; width:1100px; height:400px">
+  <ul class="abs bullets" style="left:120px; top:830px; width:1680px">
+    <li>So: draw the far side of <span class="mr"><i>H</i></span> first, then the near side, whichever side <span class="mr"><i>V</i></span> is on</li>
+  </ul>
+  <aside class="notes">
+Optional.
+
+If H(V) > 0, then no object A with H(A) > 0 can be occluded by an object B with H(B) < 0. If H(V) < 0, the same holds with the signs exchanged. A line of sight from V reaching A stays on V's side of H, since a line crosses a plane just once, so it cannot meet B.
+
+The important thing: this order is decided by one sign, the side of H on which the viewpoint lies. Moving the viewpoint does not require re-sorting anything else.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The BSP Tree</h1>
+  <ul class="abs bullets" style="left:120px; top:215px; width:1680px">
+    <li>BSP = binary space partitioning</li>
+    <li>Each tree node corresponds to a convex region of space, and interior nodes hold a plane that splits the region in two</li>
+  </ul>
+  <img class="abs" src="./assets/bsp_regions-C8-X-2ri.svg" alt="A scene split by lines A, B and C, with a house or a tree in each region; the corresponding binary tree" style="left:345px; top:480px; width:1400px; height:559px">
+  <aside class="notes">
+Optional.
+
+A general n-dimensional BSP tree is a binary tree whose nodes correspond to subregions (possibly unbounded) of the space. Each interior node is associated with a hyperplane subdividing the node's region into two half-spaces, and each of its two children corresponds to one of them. So the leaves correspond to convex regions, the intersection of all the half-spaces along the path from the root to the leaf.
+
+Let H be the plane at a node, with the viewpoint V in its front half-space. By the planar separation principle, every object in the back subtree can come before the objects in the front subtree in a back-to-front order. This suggests a divide-and-conquer way of generating a depth-ordered list of polygons, for any viewpoint.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">BSP-Tree Painter’s Algorithm</h1>
+  <ul class="abs bullets" style="left:60px; top:230px; width:880px">
+    <li>Construct (auto-partition):</li>
+    <li class="sub">Pick a polygon; its plane is the root</li>
+    <li class="sub">Make two lists: the polygons in front of it and behind it, splitting those that cross it</li>
+    <li class="sub">Recurse on the two lists</li>
+    <li>Display: traverse back to front, from the viewpoint, drawing as you go</li>
+  </ul>
+  <pre class="abs code" style="left:980px; top:235px; font-size:36px">Back2Front(node, viewpoint):
+  if node is empty: return
+  if viewpoint is in front of
+     node.plane:
+    Back2Front(node.back, viewpoint)
+    draw node.polygon
+    Back2Front(node.front, viewpoint)
+  else:
+    Back2Front(node.front, viewpoint)
+    draw node.polygon
+    Back2Front(node.back, viewpoint)</pre>
+  <aside class="notes">
+Optional.
+
+This particular type of BSP tree, where the splitting plane is always the supporting plane of a scene polygon, is called an auto-partition BSP tree. It is also possible to build a BSP tree with arbitrarily chosen planes.
+
+Once the tree is built, a simple traversal is all it takes to get a depth ordering, and it works for any viewpoint, so a static scene needs just one tree. This made BSP trees popular in early games, such as Doom. Each polygon is drawn at its own node, between the two subtrees.
+
+Complexity: because of the splitting, the size of the BSP tree, and consequently the time to traverse it, can unfortunately be O(n²) for n polygons in 3D.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">BSP-Tree Construction</h1>
+  <div class="demo" data-demo="bsp" data-mode="build" data-at="215,205"></div>
+  <span class="fragment" data-fragment-index="1"></span>
+  <span class="fragment" data-fragment-index="2"></span>
+  <span class="fragment" data-fragment-index="3"></span>
+  <span class="fragment" data-fragment-index="4"></span>
+  <span class="fragment" data-fragment-index="5"></span>
+  <span class="fragment" data-fragment-index="6"></span>
+  <aside class="notes">
+Optional. A top view, with polygons as segments. Arrow keys add one node per step.
+
+Polygon 1 becomes the root. Its line crosses a long segment, which is split in two: the parts become 3 and 6, to be handled separately. The label of each polygon is written on its + side. In the − half-space polygon 2 becomes the root of the subtree, and in the + half-space polygon 3. Each subtree then continues in the same way.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">BSP-Tree Traversal</h1>
+  <div class="demo" data-demo="bsp" data-mode="traverse" data-at="215,205"></div>
+  <div class="abs caption bsp-order" style="left:215px; width:1489px; top:960px; font-size:48px"></div>
+  <span class="fragment" data-fragment-index="1"></span>
+  <span class="fragment" data-fragment-index="2"></span>
+  <span class="fragment" data-fragment-index="3"></span>
+  <span class="fragment" data-fragment-index="4"></span>
+  <span class="fragment" data-fragment-index="5"></span>
+  <span class="fragment" data-fragment-index="6"></span>
+  <span class="fragment" data-fragment-index="7"></span>
+  <span class="fragment" data-fragment-index="8"></span>
+  <span class="fragment" data-fragment-index="9"></span>
+  <span class="fragment" data-fragment-index="10"></span>
+  <span class="fragment" data-fragment-index="11"></span>
+  <span class="fragment" data-fragment-index="12"></span>
+  <aside class="notes">
+Optional.
+
+Demo: the arrow keys step through the traversal. The red arrow points at the current node, and its line is highlighted in the scene. At each node the traversal asks on which side of the line the eye is, and goes to the far side first. When it comes back, it draws the node's polygon (painted in the scene, and added to the order), and then goes to the near side. Empty subtrees are marked with the ground symbol.
+
+Drag the eye at any step: the tree does not change, only the order does. Compare the order with the picture: a polygon listed later may cover one listed earlier, never the reverse.
+
+The direction the camera looks in does not matter here, only its position.
+  </aside>
+</section>
+
+<!-- part 2 -->
+<section>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Texture Mapping</div>
+</section>
+
+<section>
+  <h1 class="title">Texture Mapping</h1>
+  <div class="demo" data-demo="uvmap" data-panels="130,210,560,250,2"></div>
+  <div class="abs" data-arrow data-w="170" data-h="100" style="left:735px; top:440px"></div>
+  <div class="abs caption gray" style="left:130px; width:560px; top:775px">the texture, with (<span class="mr"><i>u</i>, <i>v</i></span>)</div>
+  <div class="abs caption gray" style="left:940px; width:720px; top:820px">the surface, on the screen</div>
+  <ul class="abs bullets" style="left:130px; top:880px; width:1660px">
+    <li>Store <span class="mr">(<i>u</i>, <i>v</i>)</span> at each vertex, interpolate them with the perspective correction, and look up a <i>texel</i></li>
+  </ul>
+  <aside class="notes">
+A texture adds detail to a surface without adding geometry: bricks on a wall need no extra triangles for each brick. A pixel of a texture is called a texel, to tell it apart from a pixel of the screen. Color is only one use: the same mechanism can store other material properties, as we will see.
+
+Each vertex of the mesh gets texture coordinates (u, v), usually in [0, 1]². This parameterization is usually made by an artist, or an unwrapping tool. For a pixel of a triangle, (u, v) is interpolated with the perspective-correct formula, which is exactly the problem we have just solved, and then used to look up the texture.
+
+Demo: computed live. Drag the corners of the house on the texture on the left: the house on the right is unchanged in shape, but it shows the new part of the texture. Moving a corner stretches the texture across its triangles.
+
+Coordinates outside [0, 1] are handled by a wrap mode: repeat (tiling), or clamp to the edge.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Projection Mappings</h1>
+  <img class="abs" src="./assets/map_planar-Bt86jTXf.png" alt="Box, sphere and cylinder with a planar mapping" style="left:30px; top:230px; width:600px; height:300px">
+  <img class="abs" src="./assets/map_cylindrical-DfcWO5Mr.png" alt="Box, sphere and cylinder with a cylindrical mapping" style="left:660px; top:230px; width:600px; height:300px">
+  <img class="abs" src="./assets/map_spherical-0LLnfdfY.png" alt="Box, sphere and cylinder with a spherical mapping" style="left:1290px; top:230px; width:600px; height:300px">
+  <div class="abs caption" style="left:30px; width:600px; top:550px">Planar</div>
+  <div class="abs caption" style="left:660px; width:600px; top:550px">Cylindrical</div>
+  <div class="abs caption" style="left:1290px; width:600px; top:550px">Spherical</div>
+  <div class="abs eq" data-scale="3.8" data-tex="(u,v)=\left(\frac{x}{w},\frac{z}{h}\right)" style="left:30px; width:600px; top:640px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="\theta=\mathrm{atan2}(z,x)" style="left:660px; width:600px; top:630px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="\left(\frac12+\frac{\theta}{2\pi},\frac{y}{h}\right)" style="left:660px; width:600px; top:710px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="\theta=\mathrm{atan2}(z,x),\ \ \varphi=\arccos\frac{y}{r}" style="left:1290px; width:600px; top:625px; text-align:center"></div>
+  <div class="abs eq" data-scale="3.8" data-tex="\left(\frac12+\frac{\theta}{2\pi},\ 1-\frac{\varphi}{\pi}\right)" style="left:1290px; width:600px; top:710px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:860px; width:1420px">
+    <li>When there are no stored coordinates: compute <span class="mr">(<i>u</i>, <i>v</i>)</span> from the 3D position</li>
+  </ul>
+  <aside class="notes">
+Optional.
+
+Instead of storing (u, v) at each vertex, compute it from the position, by projecting onto an intermediate surface whose parameterization is known. In the images, coordinates are relative to each object's center, and the planar and cylindrical mappings have been shifted to put that center in the middle of the texture. These are the same mappings used for world maps; each stretches the texture where the surface is not parallel to the projection surface.
+
+Look at the box in the planar mapping: its sides, parallel to the projection direction, get streaks. The sphere in the spherical mapping has its texture pinched at the poles; a cylinder or a sphere needs a seam where θ jumps from π to −π, and interpolating u across the seam makes the whole texture appear backward in one column of triangles.
+
+The images are computed: a small ray caster finds the point of the object at each pixel, and the formula gives its (u, v).
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Cube Maps</h1>
+  <div class="demo" data-demo="cubemap" data-cross="40,225,150" data-render="700,205,500"></div>
+  <div class="abs caption gray" style="left:40px; width:600px; top:690px">the six faces, unfolded</div>
+  <div class="abs demo choices cube-shape" style="left:700px; top:720px; width:500px; justify-content:center" data-prevent-swipe>
+    <button data-value="sphere">sphere</button>
+    <button data-value="torus">torus</button>
+    <button data-value="blob">blob</button>
+  </div>
+  <ul class="abs bullets" style="left:1250px; top:230px; width:630px">
+    <li>A texture on each face of a cube around the object</li>
+    <li>Look up by the direction <span class="mr"><b>d</b></span> from the center</li>
+    <li>The largest <span class="mr">|<i>d<sub>i</sub></i>|</span> picks the face; the other two, divided by it, give <span class="mr">(<i>u</i>, <i>v</i>)</span></li>
+    <li>No poles, no seams</li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="{+x}\text{ face:}\qquad (u,v)=\frac12\Big(1-\frac{d_z}{d_x},\ 1+\frac{d_y}{d_x}\Big)" style="left:0; width:1920px; top:850px; text-align:center"></div>
+  <aside class="notes">
+A cube map stores six square textures, one on each face of a cube centered at the object. To find the texture at a surface point p, take the direction d = p − c from the center c, and follow it out to the cube: the component of d with the largest magnitude says which face it hits, and dividing the other two components by it gives coordinates from −1 to 1 on that face, which we map to (u, v) from 0 to 1. The equation shows the +x face: seen from outside, its u axis points along −z and its v axis along y.
+
+Compared with a spherical mapping, there is no pole where the texture is pinched, and no seam where a coordinate jumps. The distortion is bounded: a texel at a corner of a face covers a smaller solid angle than one in the middle, by a factor of 3^(3/2) ≈ 5. The grid lines continue across the edges of the cube, so the six faces join without a break.
+
+Demo: drag the object to turn it; the texture turns with it. The buttons change the object. Any object can use a cube map, since all it needs is a direction from the center; on the torus, the directions from the center pass through the hole, so the inner side of the ring takes the same faces as the outer side behind it.
+
+GPUs support cube maps directly: the lookup takes a 3D direction, and the hardware picks the face and filters within it. In week 12 we meet the same lookup for a different purpose: storing the light that arrives from every direction, an environment map.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Magnification</h1>
+  <img class="abs" src="./assets/mag_nearest-D9q07RsI.png" alt="A small texture magnified with nearest neighbor" style="left:60px; top:225px; width:600px; height:600px; image-rendering:pixelated">
+  <img class="abs" src="./assets/mag_bilinear-DSV3bQa2.png" alt="The same texture magnified with bilinear interpolation" style="left:700px; top:225px; width:600px; height:600px">
+  <div class="abs caption" style="left:60px; width:600px; top:840px">Nearest neighbor</div>
+  <div class="abs caption" style="left:700px; width:600px; top:840px">Bilinear</div>
+  <ul class="abs bullets" style="left:1350px; top:240px; width:530px">
+    <li>One texel covers many pixels</li>
+    <li>Interpolate (week 2)</li>
+    <li>Bilinear: between the four nearest texels, by the fractions <span class="mr"><i>a</i>, <i>b</i></span></li>
+  </ul>
+  <div class="abs eq" data-scale="4.2" data-tex="f=(1-a)(1-b)\,f_{00}+a(1-b)\,f_{10}+(1-a)b\,f_{01}+ab\,f_{11}" style="left:0; width:1920px; top:925px; text-align:center"></div>
+  <aside class="notes">
+A lookup almost never lands exactly on a texel, so we need an interpolation in any case. In magnification, when the surface is near the camera, each texel covers many pixels. This is the reconstruction problem of week 2, with the same answers: nearest neighbor gives blocks, and bilinear gives a smooth but blurry result. Here a and b are the fractional parts of the position between the four nearest texels, with texel centers at half-integers. GPUs do bilinear filtering in hardware; bicubic is usually left to a shader.
+
+More resolution cannot be created by interpolating, of course. Magnified textures look blurry, which is why games keep several levels of detail.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Minification: the Pixel’s Footprint</h1>
+  <div class="abs caption gray" style="left:30px; width:1000px; top:190px">the screen (drag the marker)</div>
+  <div class="abs caption gray" style="left:1100px; width:600px; top:190px">the texture, around that point</div>
+  <div class="demo" data-demo="footprint" data-panels="30,250,2,1100,600"></div>
+  <div class="abs fp-read" style="left:30px; top:870px; width:1000px; font-size:44px; line-height:1.3"></div>
+  <ul class="abs bullets" style="left:1100px; top:880px; width:790px">
+    <li>One pixel covers many texels</li>
+  </ul>
+  <aside class="notes">
+Now the opposite case. A pixel is a small square on the screen, and its preimage on the surface, in the texture, is a quadrilateral: the footprint. Near the eye it is smaller than a texel (magnification). Far away it covers many texels (minification). The color the pixel should have is the average of the texture over the footprint, and looking up one point is a poor approximation of it.
+
+Demo: drag the marker. The red square on the left marks one pixel, and the panel on the right shows the part of the texture around that point, with the pixel's footprint in red. Note how it gets longer and thinner toward the horizon: the view is oblique, so it is much longer in one direction than the other. We come back to this at the end.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Sampling Problem Again</h1>
+  <div class="demo" data-demo="mipmap" data-panel="30,210,2.2" data-filter="point"></div>
+  <div class="abs demo choices mip-filter" style="left:30px; top:885px; width:1100px; justify-content:center" data-prevent-swipe>
+    <button data-value="point">Point sampling</button><button data-value="bilinear">Bilinear</button><button data-value="trilinear">Mipmap</button>
+  </div>
+  <ul class="abs bullets" style="left:1170px; top:230px; width:710px">
+    <li>A pixel samples the texture once every <span class="mr"><i>ρ</i></span> texels</li>
+    <li>Texture details finer than <span class="mr">2<i>ρ</i></span> texels are above the Nyquist rate: they alias (week 6)</li>
+    <li>Bilinear doesn’t help: it still looks at only 4 texels</li>
+    <li>The cure: low-pass filter first, then sample</li>
+  </ul>
+  <aside class="notes">
+This is the sampling problem of week 6, in a new setting. The texture is the signal, and the pixels are samples of it at a spacing of ρ texels. When the spacing is greater than one texel, the texture contains frequencies above the Nyquist rate of this sampling, and they alias. We see the classical moiré on the receding checkerboard, and in an animation, heavy shimmering. Aliasing already begins as soon as the texture is reduced at all, if it has detail at the level of a texel.
+
+Bilinear interpolation is a good reconstruction filter for magnification, but it is not a low-pass filter for reduction. For ρ much greater than 2, it mixes four neighboring texels out of very many that fall in the footprint.
+
+The cure is the same as in week 6: low-pass filter the signal to remove the frequencies that cannot be represented, before sampling. The difficulty here is that ρ is different at each pixel, and we have only a few nanoseconds per pixel. Computing the average over the footprint explicitly is too expensive.
+
+Demo: the three buttons compare the methods; the third one is explained in the next slides. This is computed live per pixel on a checkerboard texture of 256 × 256 texels.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Mipmapping: the Gaussian Pyramid with a Job</h1>
+  <img class="abs" src="./assets/pyramid-CJ2moH48.png" alt="A Gaussian pyramid of a face, each level half the size of the previous one" style="left:60px; top:225px; width:1212px; height:512px">
+  <ul class="abs bullets" style="left:1320px; top:240px; width:570px">
+    <li>Precompute the texture low-pass filtered at all scales</li>
+    <li>At run time, one lookup, in the right level</li>
+    <li>Extra memory: only ⅓</li>
+  </ul>
+  <div class="abs eq" data-scale="3.8" data-tex="1+\frac14+\frac1{16}+\cdots=\frac43" style="left:1320px; width:570px; top:680px; text-align:center"></div>
+  <ul class="abs bullets" style="left:250px; top:800px; width:1420px">
+    <li>Mip = <i>multum in parvo</i>, “much in little” (Williams 1983)</li>
+  </ul>
+  <aside class="notes">
+You built this in the week 6 recitation: each level is the previous one low-pass filtered and subsampled by 2. At level ℓ, one texel summarizes 2^ℓ × 2^ℓ texels of the original. So a low-pass filter that would be very expensive per pixel becomes one lookup, with all the work done in advance, one time per texture.
+
+The storage is just a third more than the texture itself, by the geometric series on the slide.
+
+GPUs and graphics libraries often build the levels with the simplest filter, averaging 2 × 2 blocks of texels. A Gaussian-like filter gives better quality, and the principle is the same. The pyramid is computed once, before rendering, usually from the texture in a linear space (more about that next week).
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Level Selection</h1>
+  <div class="demo" data-demo="mipmap" data-panel="30,210,2.2" data-filter="levels"></div>
+  <div class="abs demo choices mip-filter" style="left:30px; top:885px; width:1100px; justify-content:center" data-prevent-swipe>
+    <button data-value="levels">Levels</button><button data-value="mipmap">One level</button><button data-value="trilinear">Two levels</button>
+  </div>
+  <div class="abs demo" style="left:180px; top:965px; width:800px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-bias" style="width:230px"></span><input type="range" name="bias" min="-3" max="3" step="0.1"></div>
+  </div>
+  <ul class="abs bullets" style="left:1170px; top:230px; width:710px">
+    <li>Choose the level where a pixel covers one texel</li>
+  </ul>
+  <div class="abs eq" data-scale="3.4" data-tex="\rho=\max\left(\left\|\frac{\partial(s,t)}{\partial x}\right\|,\left\|\frac{\partial(s,t)}{\partial y}\right\|\right)" style="left:1170px; width:710px; top:370px; text-align:center"></div>
+  <div class="abs eq" data-scale="4.2" data-tex="\lambda=\log_2\rho" style="left:1170px; width:710px; top:520px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1170px; top:620px; width:710px">
+    <li><span class="mr">(<i>s</i>, <i>t</i>)</span>: texture coordinates in texels</li>
+    <li>Level too fine: aliasing</li>
+    <li>Level too coarse: blur</li>
+  </ul>
+  <aside class="notes">
+ρ is the length of the longer side of the footprint, measured in texels. GPUs get the derivatives by subtracting (s, t) at neighboring pixels, which is why they process pixels in 2 × 2 blocks. The level is log₂ρ: at level λ, a texel is ρ original texels wide, so a pixel covers one texel. For λ < 0 we are magnifying, and level 0 is used.
+
+Demo: "Levels" paints each level in its own color, so you see the rings of the levels around the eye. The slider biases the level. Move it to the left, finer than the formula says: the aliasing comes back. To the right, coarser: everything becomes blurrier.
+
+The "One level" button shows the lines where the selected level changes. The next slide removes them.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Trilinear Filtering</h1>
+  <img class="abs" src="./assets/trilinear-C0XJa-Lg.svg" alt="Bilinear lookups in two adjacent levels, combined by the fraction of the level" style="left:340px; top:215px; width:1240px; height:500px">
+  <ul class="abs bullets" style="left:250px; top:760px; width:1420px">
+    <li><span class="mr"><i>λ</i></span> is rarely an integer: look up both levels <span class="mr"><i>ℓ</i> = ⌊<i>λ</i>⌋</span> and <span class="mr"><i>ℓ</i> + 1</span>, and interpolate between them</li>
+    <li>Linear in <span class="mr"><i>s</i></span>, <span class="mr"><i>t</i></span> and <span class="mr"><i>λ</i></span>: 8 texels</li>
+  </ul>
+  <aside class="notes">
+With one level, the filter jumps by a factor of 2 where the level changes, and the jump shows as a line across the surface, which moves with the camera. Trilinear filtering removes it: a bilinear lookup in each of the two levels, then a linear interpolation between them by the fractional part of λ. Trilinear is a standard feature of every GPU.
+
+You can compare on the previous slide, with the "One level" and "Two levels" buttons.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Anisotropic Filtering</h1>
+  <img class="abs" src="./assets/aniso-B45tu1Yw.svg" alt="A long and thin footprint: one big filter sized by the long side, and several small filters along it" style="left:210px; top:210px; width:1500px; height:500px">
+  <ul class="abs bullets" style="left:250px; top:750px; width:1420px">
+    <li>An oblique view gives a long, thin footprint</li>
+    <li>A level sized by its long side over-blurs the short one</li>
+    <li>Anisotropic filtering: several lookups along the long side, at a finer level</li>
+  </ul>
+  <aside class="notes">
+A mipmap filters by the same amount in both directions, while the footprint on an oblique surface can be many times longer than it is wide. The level is chosen for the long side, to avoid aliasing, so the short direction is over-blurred. That is why the far part of the floor in the demo fades to gray much too early.
+
+GPUs solve this with anisotropic filtering: the level comes from the short side of the footprint, and several trilinear lookups, up to 16, are averaged along the long side. It costs up to 16 times as many lookups, only where the footprint is long.
+
+We only mention it here. It is available as a single setting in every graphics API.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Antialiasing Rendered Edges</h1>
+  <div class="demo" data-demo="aa" data-grid="40,215,44,29,23"></div>
+  <div class="abs demo choices aa-n" style="left:40px; top:900px; width:1012px; justify-content:center" data-prevent-swipe>
+    <button data-value="1">1 sample</button><button data-value="2">4 samples</button><button data-value="4">16 samples</button>
+  </div>
+  <ul class="abs bullets" style="left:1110px; top:240px; width:770px">
+    <li>The pixel-center rule samples the triangle at one point per pixel</li>
+    <li>An edge is a step: infinite frequencies, so aliasing is inevitable</li>
+    <li><i>Supersampling</i>: several samples per pixel, averaged</li>
+    <li>The pixel’s value is its <i>coverage</i>, a fraction</li>
+  </ul>
+  <aside class="notes">
+Week 6 once more. The binary inside test is point sampling of a signal with a step edge, whose spectrum has no upper limit. The result is the staircase pattern: jaggies. Texture filtering cannot help, since the edge is in the geometry and not in the texture.
+
+The direct approach is supersampling: take n × n samples per pixel, and average. This approximates a box filter over the pixel. The cost is proportional to the number of samples if the color is computed at each one. GPUs therefore use multisampling (MSAA): coverage and depth are tested at each sample, and the color is computed once per pixel. So edges get the benefit, at a small cost. In the demo, the value of each pixel is the fraction of its samples inside the triangle.
+
+Demo: compare the three settings; drag the vertices. Nearly horizontal and nearly vertical edges show the staircase most clearly. The result is a pixel partially covered, with a fractional coverage. To combine this with what lies behind, we need the next slide.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Alpha Compositing</h1>
+  <div class="demo" data-demo="over" data-panel="40,210,2.2"></div>
+  <div class="abs demo choices over-order" style="left:40px; top:885px; width:880px; justify-content:center" data-prevent-swipe>
+    <button data-value="back">Back to front</button><button data-value="front">Front to back</button>
+  </div>
+  <div class="abs demo" style="left:120px; top:965px; width:720px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-alpha" style="width:170px"></span><input type="range" name="alpha" min="0" max="1" step="0.01" value="0.55"></div>
+  </div>
+  <ul class="abs bullets" style="left:980px; top:230px; width:900px">
+    <li>A fourth channel <span class="mr"><i>α</i></span>: the fraction of the pixel the surface covers</li>
+    <li>The <i>over</i> operator (Porter and Duff 1984):</li>
+  </ul>
+  <div class="abs eq" data-scale="4.6" data-tex="C=\alpha F+(1-\alpha)B" style="left:980px; width:900px; top:500px; text-align:center"></div>
+  <ul class="abs bullets" style="left:980px; top:600px; width:900px">
+    <li>The order matters, so the z-buffer alone is not enough</li>
+    <li>Draw opaque surfaces first, then translucent ones sorted back to front</li>
+  </ul>
+  <aside class="notes">
+The same equation covers two different physical situations: a fractional coverage of the pixel, as at an antialiased edge, and a truly translucent surface, like glass or smoke. F is the foreground color, B is what is behind it. It is a linear interpolation between the two colors, and it is not commutative: F over B is not B over F.
+
+For a stack of layers, the over operator is applied repeatedly, and the correct order is back to front. Here the painter's algorithm comes back, on GPUs with a z-buffer, for translucent surfaces. The usual recipe: first draw all opaque surfaces with the depth test on. Then sort the translucent ones, and draw them back to front, with the depth test on and writing to the z-buffer off.
+
+Why not just rely on the z-buffer? It keeps one depth per pixel. Demo: the red triangle is opaque and behind; the blue one is in front, and translucent. With "Front to back" the blue triangle is drawn first and writes its depth, so the red one fails the depth test where they overlap: behind the blue triangle we see the checkerboard instead of red. Drawn back to front, the result is right. The slider changes the α of the blue triangle.
+
+A note on the form: storing the color premultiplied by α, F′ = αF, makes the operator simpler, C′ = F′ + (1 − α)B′, and it is what libraries normally do. The over operator is due to Porter and Duff (1984).
+  </aside>
+</section>
+
+</div>
+</div>
+</body>
+</html>
