@@ -209,8 +209,8 @@ Where is the pixel center? Pixel (i, j) is the square [i, i+1] × [j, j+1] of th
         draw pixel (x, y)</pre>
   <ul class="abs bullets" style="left:250px; top:520px; width:1420px">
     <li>Each edge function is <i>linear</i> in <span class="mr"><i>x</i></span> and <span class="mr"><i>y</i></span>: three coefficients per edge, fixed for the triangle</li>
-    <li>So a whole block of pixels can be evaluated at once</li>
-    <li>This is how GPUs work: many pixels in parallel, not one by one</li>
+    <li>Early graphics software and hardware performed the computation incrementally</li>
+    <li>Modern GPUs perform the test in parallel on all pixels of a tile</li>
   </ul>
   <aside class="notes">
 Since E is linear in x and y, E_ab(x, y) = A x + B y + C with coefficients computed once per triangle. Early hardware used this to step along scan lines: moving one pixel to the right just adds a constant, E(x + 1, y) = E(x, y) − (b_y − a_y).
@@ -248,7 +248,7 @@ The alternative of drawing the edges with a line algorithm and filling between t
   <div class="abs eq" data-scale="4.2" data-tex="\mathbf p=\alpha\mathbf a+\beta\mathbf b+\gamma\mathbf c,\quad\alpha+\beta+\gamma=1" style="left:1000px; width:880px; top:240px; text-align:center"></div>
   <ul class="abs bullets" style="left:1010px; top:340px; width:860px">
     <li>Inside the triangle: all three are positive</li>
-    <li>Each is a ratio of areas, and <span class="mr"><i>E</i></span> is twice a signed area:</li>
+    <li>Each barycentric coordinate is a ratio of areas:</li>
   </ul>
   <div class="abs eq" data-scale="4.2" data-tex="\alpha=\frac{E_{bc}(\mathbf p)}{A},\quad\beta=\frac{E_{ca}(\mathbf p)}{A},\quad\gamma=\frac{E_{ab}(\mathbf p)}{A}" style="left:1000px; width:880px; top:565px; text-align:center"></div>
   <div class="abs eq" data-scale="4.2" data-tex="A=E_{ab}(\mathbf c)" style="left:1000px; width:880px; top:700px; text-align:center"></div>
@@ -285,59 +285,6 @@ Demo: drag the vertices. On a flat 2D triangle this is exactly right. It is not 
   </aside>
 </section>
 
-<section>
-  <h1 class="title">Equal Steps on the Screen</h1>
-  <img class="abs" src="./assets/screen_steps-7MCfI3f7.svg" alt="Rays from the eye through equally spaced pixels hit a receding segment at unequal spacing" style="left:210px; top:215px; width:1500px; height:580px">
-  <ul class="abs bullets" style="left:250px; top:830px; width:1420px">
-    <li>Halfway between <span class="mr"><b>a</b></span> and <span class="mr"><b>b</b></span> on the screen is not halfway on the surface</li>
-  </ul>
-  <aside class="notes">
-Perspective projection preserves straight lines but not ratios along them: it maps lines to lines, but it does not preserve the midpoint. Equal steps on the screen correspond to larger and larger steps on the surface as it recedes. So a quantity that varies linearly along the surface does not vary linearly on the screen.
-
-Barycentric coordinates computed on the screen are the weights of the projected triangle. They are not the weights of the same point on the 3D triangle.
-  </aside>
-</section>
-
-<section>
-  <h1 class="title">The Artifact</h1>
-  <div class="demo" data-demo="persp" data-panels="40,205,40,2.25"></div>
-  <div class="abs caption" style="left:40px; width:900px; top:885px">Linear on the screen</div>
-  <div class="abs caption" style="left:980px; width:900px; top:885px">Perspective-correct</div>
-  <div class="abs demo" style="left:460px; top:955px; width:1000px" data-prevent-swipe>
-    <div class="slider-row hom-slider"><span class="lab lab-tilt" style="width:230px"></span><input type="range" name="tilt" min="0" max="72" step="1" value="58"></div>
-  </div>
-  <aside class="notes">
-Computed live: the same square, two triangles, with the same texture coordinates at its four corners. On the left, the coordinates are interpolated with the screen's barycentric coordinates. The checkerboard bends along the diagonal shared by the two triangles, because each triangle is correct at its own three vertices only. On the right, the correction of the next slide.
-
-Demo: with no tilt the two agree, since all vertices are at the same depth. Tilt the square: the bend grows. Early game consoles without the correction (the PlayStation 1 is the well-known case) showed this wobbling of textures.
-  </aside>
-</section>
-
-<section>
-  <h1 class="title">Perspective-Correct Interpolation</h1>
-  <ul class="abs bullets" style="left:120px; top:215px; width:1680px">
-    <li>An attribute linear over the triangle is a linear function of the clip coordinates:</li>
-  </ul>
-  <div class="abs eq" data-scale="4.4" data-tex="f=k_1x+k_2y+k_3w" style="left:0; width:1920px; top:300px; text-align:center"></div>
-  <ul class="abs bullets" style="left:120px; top:400px; width:1680px">
-    <li>Divide by <span class="mr"><i>w</i></span>: linear in the screen coordinates <span class="mr"><i>x</i>/<i>w</i>, <i>y</i>/<i>w</i></span></li>
-  </ul>
-  <div class="abs eq" data-scale="4.4" data-tex="\frac{f}{w}=k_1\frac{x}{w}+k_2\frac{y}{w}+k_3" style="left:0; width:1920px; top:480px; text-align:center"></div>
-  <ul class="abs bullets" style="left:120px; top:615px; width:1680px">
-    <li>The same for <span class="mr"><i>f</i> = 1</span>: <span class="mr">1/<i>w</i></span> is linear on the screen too. So interpolate both, and divide:</li>
-  </ul>
-  <div class="abs eq" data-scale="5" data-tex="f=\frac{\alpha f_a/w_a+\beta f_b/w_b+\gamma f_c/w_c}{\alpha/w_a+\beta/w_b+\gamma/w_c}" style="left:0; width:1920px; top:770px; text-align:center"></div>
-  <aside class="notes">
-Why does the first line hold? The three vertices of the triangle, as (x, y, w) in clip coordinates, are three linearly independent vectors (unless the triangle is seen exactly edge-on). So there is exactly one linear function k₁x + k₂y + k₃w taking the prescribed values f_a, f_b, f_c at the vertices, and since the points of the triangle are combinations of its vertices, it gives the attribute everywhere on the triangle.
-
-Dividing by w turns x and y into the screen coordinates and leaves a function that is linear on the screen: this is the whole trick. So f/w can be interpolated with the barycentric coordinates computed on the screen, and so can 1/w, the special case f = 1. Their ratio recovers f.
-
-Here w is the fourth clip coordinate; with the projection matrix of week 3, w = −z_eye, the distance along the viewing direction. This is why the graphics pipeline keeps w around after the projection.
-
-Check at a vertex: at p = a we have α = 1, and the formula gives (f_a/w_a)/(1/w_a) = f_a. If all three w are equal, it reduces to the plain interpolation of the previous slides. It is always done by the GPU; you implement it in the recitation.
-  </aside>
-</section>
-
 <section data-visibility="hidden">
   <h1 class="title">Depth Needs No Correction</h1>
   <ul class="abs bullets" style="left:120px; top:230px; width:1680px">
@@ -371,7 +318,7 @@ Be careful about which z: it has to be the one after the projection. Since 1/z_e
     <li>On the screen: the sign of <span class="mr"><i>A</i></span></li>
     <li>This solves visibility for a certain class of objects. Which one?</li>
   </ul>
-  <img class="abs" src="./assets/backface-BwDNRs_E.svg" alt="A convex polygon seen from the eye: faces whose normals point away from the eye are dashed" style="left:1010px; top:240px; width:900px; height:620px">
+  <img class="abs" src="./assets/backface-Dz38Ocyp.svg" alt="A convex polygon seen from the eye: faces whose normals point away from the eye are dashed" style="left:1010px; top:240px; width:900px; height:620px">
   <aside class="notes">
 Why it is worth doing: about half of the polygons of a closed object face away, so culling removes half of the work before any pixel is touched.
 
@@ -413,7 +360,7 @@ for each triangle, in any order:
             framebuffer(x, y) = color at (x, y)</pre>
   <ul class="abs bullets" style="left:300px; top:760px; width:1320px">
     <li>The order of the triangles does not matter</li>
-    <li>Each pixel is a comparison and at most two writes</li>
+    <li>Each pixel is a depth test and at most two writes</li>
   </ul>
   <aside class="notes">
 With z_ndc in [−1, 1], the near plane has −1 and the far plane +1, so a smaller value means nearer and the buffer starts at 1. (The value actually stored is usually rescaled to [0, 1] by the viewport transformation.)
@@ -449,7 +396,7 @@ Demo: try the other orders with the buttons. The partial pictures differ, the fi
     <li class="sub">Handles intersecting surfaces with no special cases</li>
     <li class="sub">Separately rendered images can be composited using their z-buffers</li>
     <li>Disadvantages:</li>
-    <li class="sub">Requires extra memory (not so much of a problem anymore)</li>
+    <li class="sub">Requires an extra buffer (not so much of a problem anymore)</li>
     <li class="sub">Finite depth precision can cause problems</li>
     <li class="sub">May spend time on polygons that are not visible in the image</li>
   </ul>
@@ -500,7 +447,8 @@ The idea returns at the end of this lecture: translucent surfaces have to be dra
 
 <section>
   <h1 class="title">Depth Ordering</h1>
-  <img class="abs" src="./assets/depth_order-DizgkL1I.svg" alt="Three pairs of polygons with a valid depth order; below, two polygons that occlude each other, and three in a cyclic overlap" style="left:383px; top:225px; width:1153px; height:820px">
+  <img class="abs" src="./assets/depth_order_top-BeOL2n54.svg" alt="Three pairs of polygons with a valid depth order" style="left:383px; top:225px; width:1153px; height:820px">
+  <img class="abs fragment" src="./assets/depth_order_bottom-9W8WB3wF.svg" alt="Two polygons that occlude each other, and three in a cyclic overlap" style="left:383px; top:225px; width:1153px; height:820px">
   <aside class="notes">
 In the three top examples, there is a valid depth ordering (with the projection parallel to the z axis). On the left, the extents of the two polygons along the z axis are disjoint, so they can be sorted unambiguously. In the middle, the z extents overlap, but the x extents do not, so the projections are disjoint. Neither can be classified as nearer than the other, and that is no problem: we can draw them in any order we like. On the right, both the z extents and the projections overlap. However, there is a plane that separates the two polygons. The polygon on the same side of that plane as the eye cannot possibly be occluded by the one on the other side, so we can define a correct order.
 
@@ -617,6 +565,59 @@ The direction the camera looks in does not matter here, only its position.
 <!-- part 2 -->
 <section>
   <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Texture Mapping</div>
+</section>
+
+<section>
+  <h1 class="title">Equal Steps on the Screen</h1>
+  <img class="abs" src="./assets/screen_steps-7MCfI3f7.svg" alt="Rays from the eye through equally spaced pixels hit a receding segment at unequal spacing" style="left:210px; top:215px; width:1500px; height:580px">
+  <ul class="abs bullets" style="left:250px; top:830px; width:1420px">
+    <li>Halfway between <span class="mr"><b>a</b></span> and <span class="mr"><b>b</b></span> on the screen is not halfway on the surface</li>
+  </ul>
+  <aside class="notes">
+Perspective projection preserves straight lines but not ratios along them: it maps lines to lines, but it does not preserve the midpoint. Equal steps on the screen correspond to larger and larger steps on the surface as it recedes. So a quantity that varies linearly along the surface does not vary linearly on the screen.
+
+Barycentric coordinates computed on the screen are the weights of the projected triangle. They are not the weights of the same point on the 3D triangle.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">The Artifact</h1>
+  <div class="demo" data-demo="persp" data-panels="40,205,40,2.25"></div>
+  <div class="abs caption" style="left:40px; width:900px; top:885px">Linear on the screen</div>
+  <div class="abs caption" style="left:980px; width:900px; top:885px">Perspective-correct</div>
+  <div class="abs demo" style="left:460px; top:955px; width:1000px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-tilt" style="width:230px"></span><input type="range" name="tilt" min="0" max="72" step="1" value="58"></div>
+  </div>
+  <aside class="notes">
+Computed live: the same square, two triangles, with the same texture coordinates at its four corners. On the left, the coordinates are interpolated with the screen's barycentric coordinates. The checkerboard bends along the diagonal shared by the two triangles, because each triangle is correct at its own three vertices only. On the right, the correction of the next slide.
+
+Demo: with no tilt the two agree, since all vertices are at the same depth. Tilt the square: the bend grows. Early game consoles without the correction (the PlayStation 1 is the well-known case) showed this wobbling of textures.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Perspective-Correct Interpolation</h1>
+  <ul class="abs bullets" style="left:120px; top:215px; width:1680px">
+    <li>An attribute linear over the triangle is a linear function of the clip coordinates:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.4" data-tex="f=k_1x+k_2y+k_3w" style="left:0; width:1920px; top:300px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:400px; width:1680px">
+    <li>Divide by <span class="mr"><i>w</i></span>: linear in the screen coordinates <span class="mr"><i>x</i>/<i>w</i>, <i>y</i>/<i>w</i></span></li>
+  </ul>
+  <div class="abs eq" data-scale="4.4" data-tex="\frac{f}{w}=k_1\frac{x}{w}+k_2\frac{y}{w}+k_3" style="left:0; width:1920px; top:480px; text-align:center"></div>
+  <ul class="abs bullets" style="left:120px; top:615px; width:1680px">
+    <li>The same for <span class="mr"><i>f</i> = 1</span>: <span class="mr">1/<i>w</i></span> is linear on the screen too. So interpolate both, and divide:</li>
+  </ul>
+  <div class="abs eq" data-scale="5" data-tex="f=\frac{\alpha f_a/w_a+\beta f_b/w_b+\gamma f_c/w_c}{\alpha/w_a+\beta/w_b+\gamma/w_c}" style="left:0; width:1920px; top:770px; text-align:center"></div>
+  <aside class="notes">
+Why does the first line hold? The three vertices of the triangle, as (x, y, w) in clip coordinates, are three linearly independent vectors (unless the triangle is seen exactly edge-on). So there is exactly one linear function k₁x + k₂y + k₃w taking the prescribed values f_a, f_b, f_c at the vertices, and since the points of the triangle are combinations of its vertices, it gives the attribute everywhere on the triangle.
+
+Dividing by w turns x and y into the screen coordinates and leaves a function that is linear on the screen: this is the whole trick. So f/w can be interpolated with the barycentric coordinates computed on the screen, and so can 1/w, the special case f = 1. Their ratio recovers f.
+
+Here w is the fourth clip coordinate; with the projection matrix of week 3, w = −z_eye, the distance along the viewing direction. This is why the graphics pipeline keeps w around after the projection.
+
+Check at a vertex: at p = a we have α = 1, and the formula gives (f_a/w_a)/(1/w_a) = f_a. If all three w are equal, it reduces to the plain interpolation of the previous slides. It is always done by the GPU; you implement it in the recitation.
+  </aside>
 </section>
 
 <section>
