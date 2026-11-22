@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rasterization, Visibility, and Texturing</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/rasterization-BJ8QDrW8.js"></script>
+  <script type="module" crossorigin src="./assets/rasterization-BXyNNRve.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/view3d-BDb8ZUMQ.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-D7SW_Fiv.css">
 </head>
@@ -565,6 +565,28 @@ The direction the camera looks in does not matter here, only its position.
 <!-- part 2 -->
 <section>
   <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Texture Mapping</div>
+</section>
+
+<section>
+  <h1 class="title">Texture Mapping</h1>
+  <div class="demo" data-demo="atlas" data-atlas="1310,225,560" data-render="690,205,580"></div>
+  <div class="abs caption gray" style="left:1310px; width:560px; top:800px">the texture: an atlas</div>
+  <div class="abs caption gray" style="left:690px; width:580px; top:800px">the model, rendered</div>
+  <ul class="abs bullets" style="left:50px; top:230px; width:610px">
+    <li>Detail without more geometry: an image glued onto the surface</li>
+    <li>An atlas: the surface cut into pieces, laid out flat in one image</li>
+    <li>Each vertex stores <span class="mr">(<i>u</i>, <i>v</i>)</span>,  its coordinates in the atlas</li>
+    <li>Each pixel looks up the texture at its interpolated <span class="mr">(<i>u</i>, <i>v</i>)</span></li>
+  </ul>
+  <aside class="notes">
+A texture adds detail to a surface without adding geometry. The house is only 14 triangles, yet it shows hundreds of bricks and tiles, a door and windows: all of them are in the image, none in the mesh. A pixel of a texture is called a texel, to tell it apart from a pixel of the screen.
+
+Each vertex stores texture coordinates (u, v): where it lands in the texture. Each pixel of a triangle gets its (u, v) by interpolating those of the triangle's three vertices, and reads the texture there. How exactly to interpolate them is the subject of the next slides.
+
+A surface that is not flat cannot be laid flat in one piece without tearing or stretching. So it is cut into pieces, called charts, each flattened and placed in a single image, the atlas. Here each face of the house is a chart. The cuts have a price: a corner of the house belongs to three charts, so it is stored as three vertices, with the same position and different (u, v). The space between the charts is wasted, and the charts are painted a little beyond their outlines, so that filtering near an edge does not pick up the background. Atlases of real models are made by unwrapping tools, and the charts are usually irregular; the artist then paints on the atlas, or on the model directly.
+
+Demo: drag the house to turn it. Point at a face of the house, or at a chart of the atlas, to see its partner highlighted. The dashed lines are the triangles; each has its three corners in the atlas.
+  </aside>
 </section>
 
 <section>
