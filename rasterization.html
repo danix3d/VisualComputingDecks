@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rasterization, Visibility, and Texturing</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/rasterization-BXyNNRve.js"></script>
+  <script type="module" crossorigin src="./assets/rasterization-CVM5VvtX.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/view3d-BDb8ZUMQ.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-D7SW_Fiv.css">
 </head>
@@ -706,11 +706,9 @@ Coordinates outside [0, 1] are handled by a wrap mode: repeat (tiling), or clamp
   <div class="abs eq" data-scale="3.8" data-tex="\theta=\mathrm{atan2}(z,x),\ \ \varphi=\arccos\frac{y}{r}" style="left:1290px; width:600px; top:625px; text-align:center"></div>
   <div class="abs eq" data-scale="3.8" data-tex="\left(\frac12+\frac{\theta}{2\pi},\ 1-\frac{\varphi}{\pi}\right)" style="left:1290px; width:600px; top:710px; text-align:center"></div>
   <ul class="abs bullets" style="left:250px; top:860px; width:1420px">
-    <li>When there are no stored coordinates: compute <span class="mr">(<i>u</i>, <i>v</i>)</span> from the 3D position</li>
+    <li>When there is no atlas with stored coordinates: compute <span class="mr">(<i>u</i>, <i>v</i>)</span> from the 3D position</li>
   </ul>
   <aside class="notes">
-Optional.
-
 Instead of storing (u, v) at each vertex, compute it from the position, by projecting onto an intermediate surface whose parameterization is known. In the images, coordinates are relative to each object's center, and the planar and cylindrical mappings have been shifted to put that center in the middle of the texture. These are the same mappings used for world maps; each stretches the texture where the surface is not parallel to the projection surface.
 
 Look at the box in the planar mapping: its sides, parallel to the projection direction, get streaks. The sphere in the spherical mapping has its texture pinched at the poles; a cylinder or a sphere needs a seam where θ jumps from π to −π, and interpolating u across the seam makes the whole texture appear backward in one column of triangles.
@@ -831,8 +829,8 @@ GPUs and graphics libraries often build the levels with the simplest filter, ave
   <div class="abs demo choices mip-filter" style="left:30px; top:885px; width:1100px; justify-content:center" data-prevent-swipe>
     <button data-value="levels">Levels</button><button data-value="mipmap">One level</button><button data-value="trilinear">Two levels</button>
   </div>
-  <div class="abs demo" style="left:180px; top:965px; width:800px" data-prevent-swipe>
-    <div class="slider-row hom-slider"><span class="lab lab-bias" style="width:230px"></span><input type="range" name="bias" min="-3" max="3" step="0.1"></div>
+  <div class="abs demo" style="left:140px; top:965px; width:880px" data-prevent-swipe>
+    <div class="slider-row hom-slider"><span class="lab lab-bias" style="width:320px"></span><input type="range" name="bias" min="-3" max="3" step="0.1"></div>
   </div>
   <ul class="abs bullets" style="left:1170px; top:230px; width:710px">
     <li>Choose the level where a pixel covers one texel</li>
