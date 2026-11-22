@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rasterization, Visibility, and Texturing</title>
   <link rel="icon" href="data:,">
-  <script type="module" crossorigin src="./assets/rasterization-tmUlg_B9.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/view3d-jKIGT8G8.js">
+  <script type="module" crossorigin src="./assets/rasterization-BJ8QDrW8.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/view3d-BDb8ZUMQ.js">
   <link rel="stylesheet" crossorigin href="./assets/view3d-D7SW_Fiv.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
 
 <!-- part 1 -->
 <section>
-  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Rasterization and Visibility</div>
+  <div class="abs section-title" style="top:329px; height:422px; font-size:118px">Rasterization<br>Visibility<br>Texturing</div>
 </section>
 
 <section>
@@ -72,15 +72,13 @@ Rasterization draws triangles, so other representations are converted to meshes 
   <pre class="abs code" style="left:240px; top:820px">vertices  = [(x0, y0, z0), (x1, y1, z1), (x2, y2, z2), ...]
 triangles = [(0, 1, 2), (0, 2, 3), ...]</pre>
   <aside class="notes">
-For rendering, an object is described by its boundary surface: what we see is the surface, not the inside. The surface is approximated by a mesh of triangles, finer where more accuracy is needed. Both spheres here approximate the same sphere: the more triangles, the closer the approximation, and the less visible the facets.
+For rendering, an object is described by its boundary surface: what we see is the surface, not the inside. The surface is approximated by a mesh of triangles: the more triangles, the closer the approximation, and the less visible the facets.
 
 A mesh is stored as two lists. The vertex list holds each 3D point once. The triangle list refers to the vertices by their index in that list, so a vertex shared by six triangles is stored, and transformed, only once. The order of the three indices also fixes the orientation of the triangle, which we will use for back-face culling.
 
 Vertices carry more than positions: a normal, a color, texture coordinates. These are the attributes that we interpolate across each triangle later today.
 
 Why triangles? Three points always lie in a plane, a triangle is always convex, any polygon can be split into triangles, and the barycentric coordinates of week 2 interpolate across a triangle. Besides points and lines, triangles are the only thing a GPU draws.
-
-In the recitation: a mesh file format (OBJ), and the normals of faces and vertices.
   </aside>
 </section>
 
@@ -93,7 +91,7 @@ In the recitation: a mesh file format (OBJ), and the normals of faces and vertic
     <li>What color is it? Texture today, light next week</li>
   </ul>
   <aside class="notes">
-In weeks 2 and 3 we took each vertex from object coordinates to raster coordinates, keeping its depth. Everything after that is the subject of today and next week. The image formation model is the thread again: a camera forms an image by projecting the scene, and here we compute that image, one pixel at a time.
+In weeks 2 and 3 we took each vertex from object coordinates to raster coordinates, keeping its depth. Now we discuss what happens next: how to compute the image, one pixel at a time.
 
 Today has two parts: rasterization and visibility (which pixels, and which surface), and texture mapping (the first half of what color). Next week is light and shading, the second half.
   </aside>
@@ -188,13 +186,13 @@ The price: the inner loop needs to remember, at each pixel, the closest surface 
     <li>A pixel is covered when its center is inside the triangle</li>
     <li>The <i>edge function</i> of edge <span class="mr"><b>ab</b></span>:</li>
   </ul>
-  <div class="abs eq" data-scale="4.2" data-tex="E_{ab}(\mathbf p)=(\mathbf b-\mathbf a)\times(\mathbf p-\mathbf a)" style="left:1010px; width:860px; top:490px; text-align:center"></div>
-  <ul class="abs bullets" style="left:1010px; top:600px; width:860px">
-    <li>Its sign says on which side of the line <span class="mr"><b>p</b></span> lies</li>
+  <div class="abs eq" data-scale="4.2" data-tex="\begin{aligned}E_{ab}(\mathbf p)&amp;=(\mathbf b-\mathbf a)\times(\mathbf p-\mathbf a)\\&amp;=Ax+By+C\end{aligned}" style="left:1010px; width:860px; top:480px; text-align:center"></div>
+  <ul class="abs bullets" style="left:1010px; top:640px; width:860px">
+    <li><span class="mr"><i>E<sub>ab</sub></i> = 0</span> is the line through <span class="mr"><b>a</b></span> and <span class="mr"><b>b</b></span>; the sign says which side <span class="mr"><b>p</b></span> is on</li>
     <li>Inside: all three edge functions have the same sign</li>
   </ul>
   <aside class="notes">
-The 2D cross product (b − a) × (p − a) = (b_x − a_x)(p_y − a_y) − (b_y − a_y)(p_x − a_x) is the implicit equation of the line through a and b: zero on the line, positive on one side, negative on the other. The name edge function is from Pineda (1988).
+The 2D cross product (b − a) × (p − a) = (b_x − a_x)(p_y − a_y) − (b_y − a_y)(p_x − a_x). Multiplied out, with p = (x, y), it is Ax + By + C with A = a_y − b_y, B = b_x − a_x and C = a_x b_y − a_y b_x: the implicit equation of the line through a and b, zero on the line, positive on one side, negative on the other. The three coefficients are fixed for the edge, which the next slide uses. The name edge function is from Pineda (1988).
 
 A triangle is the intersection of three half-planes, so a point is inside exactly when it is on the inner side of all three lines. For a counterclockwise triangle all three functions are then positive; for a clockwise one, all negative.
 
@@ -494,8 +492,6 @@ Other remedies: avoid truly coplanar surfaces, or give one surface a small depth
     <li>Question: does a depth ordering always exist?</li>
   </ul>
   <aside class="notes">
-Optional, through the BSP slides.
-
 These are object-precision methods: they work with the polygons, not with the pixels. Each polygon drawn overwrites what is behind it, like a painter who paints the far objects first. No depth buffer is needed.
 
 The idea returns at the end of this lecture: translucent surfaces have to be drawn back to front, even on a GPU with a z-buffer.
@@ -506,8 +502,6 @@ The idea returns at the end of this lecture: translucent surfaces have to be dra
   <h1 class="title">Depth Ordering</h1>
   <img class="abs" src="./assets/depth_order-DizgkL1I.svg" alt="Three pairs of polygons with a valid depth order; below, two polygons that occlude each other, and three in a cyclic overlap" style="left:383px; top:225px; width:1153px; height:820px">
   <aside class="notes">
-Optional.
-
 In the three top examples, there is a valid depth ordering (with the projection parallel to the z axis). On the left, the extents of the two polygons along the z axis are disjoint, so they can be sorted unambiguously. In the middle, the z extents overlap, but the x extents do not, so the projections are disjoint. Neither can be classified as nearer than the other, and that is no problem: we can draw them in any order we like. On the right, both the z extents and the projections overlap. However, there is a plane that separates the two polygons. The polygon on the same side of that plane as the eye cannot possibly be occluded by the one on the other side, so we can define a correct order.
 
 In the two bottom cases no depth ordering is possible: the polygons interpenetrate, or they occlude each other in a cycle. The solution is to split some of the polygons involved, to reduce the situation to one of the top cases.
@@ -517,15 +511,13 @@ In the two bottom cases no depth ordering is possible: the polygons interpenetra
 <section>
   <h1 class="title">Planar Separation Principle</h1>
   <ul class="abs bullets" style="left:120px; top:225px; width:1680px">
-    <li>Let <span class="mr"><i>V</i></span> be a viewpoint and <span class="mr"><i>H</i></span> a plane. An object <span class="mr"><i>A</i></span> entirely on the same side of <span class="mr"><i>H</i></span> as <span class="mr"><i>V</i></span> cannot be occluded by an object <span class="mr"><i>B</i></span> entirely on the opposite side</li>
+    <li>Let <span class="mr"><i>V</i></span> be a viewpoint and <span class="mr"><i>H</i></span> a plane.  An object <span class="mr"><i>A</i></span> entirely on the same side of <span class="mr"><i>H</i></span> as <span class="mr"><i>V</i></span> cannot be occluded by an object <span class="mr"><i>B</i></span> entirely on the opposite side</li>
   </ul>
   <img class="abs" src="./assets/planar-CgwQ00Vq.svg" alt="A plane H separates a viewpoint V and object A from object B" style="left:410px; top:400px; width:1100px; height:400px">
   <ul class="abs bullets" style="left:120px; top:830px; width:1680px">
     <li>So: draw the far side of <span class="mr"><i>H</i></span> first, then the near side, whichever side <span class="mr"><i>V</i></span> is on</li>
   </ul>
   <aside class="notes">
-Optional.
-
 If H(V) > 0, then no object A with H(A) > 0 can be occluded by an object B with H(B) < 0. If H(V) < 0, the same holds with the signs exchanged. A line of sight from V reaching A stays on V's side of H, since a line crosses a plane just once, so it cannot meet B.
 
 The important thing: this order is decided by one sign, the side of H on which the viewpoint lies. Moving the viewpoint does not require re-sorting anything else.
