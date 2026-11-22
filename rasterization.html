@@ -590,7 +590,7 @@ Demo: drag the house to turn it. Point at a face of the house, or at a chart of 
 </section>
 
 <section>
-  <h1 class="title">Equal Steps on the Screen</h1>
+  <h1 class="title">The Need for Perspective-Correct Interpolation</h1>
   <img class="abs" src="./assets/screen_steps-7MCfI3f7.svg" alt="Rays from the eye through equally spaced pixels hit a receding segment at unequal spacing" style="left:210px; top:215px; width:1500px; height:580px">
   <ul class="abs bullets" style="left:250px; top:830px; width:1420px">
     <li>Halfway between <span class="mr"><b>a</b></span> and <span class="mr"><b>b</b></span> on the screen is not halfway on the surface</li>
@@ -619,26 +619,51 @@ Demo: with no tilt the two agree, since all vertices are at the same depth. Tilt
 
 <section>
   <h1 class="title">Perspective-Correct Interpolation</h1>
-  <ul class="abs bullets" style="left:120px; top:215px; width:1680px">
-    <li>An attribute linear over the triangle is a linear function of the clip coordinates:</li>
+  <ul class="abs bullets" style="left:120px; top:230px; width:1680px">
+    <li>Barycentric weights <span class="mr"><i>α</i>, <i>β</i>, <i>γ</i></span> are correct only for what is linear on the screen</li>
+    <li>An attribute <span class="mr"><i>f</i></span> is linear on the surface, not on the screen:</li>
   </ul>
-  <div class="abs eq" data-scale="4.4" data-tex="f=k_1x+k_2y+k_3w" style="left:0; width:1920px; top:300px; text-align:center"></div>
-  <ul class="abs bullets" style="left:120px; top:400px; width:1680px">
-    <li>Divide by <span class="mr"><i>w</i></span>: linear in the screen coordinates <span class="mr"><i>x</i>/<i>w</i>, <i>y</i>/<i>w</i></span></li>
+  <div class="abs eq" data-scale="4.4" data-tex="f(\alpha,\beta,\gamma)\neq\alpha f_a+\beta f_b+\gamma f_c" style="left:0; width:1920px; top:395px; text-align:center"></div>
+  <ul class="abs bullets fragment" data-fragment-index="1" style="left:120px; top:530px; width:1680px">
+    <li>But <span class="mr"><i>f</i>/<i>w</i></span> and <span class="mr">1/<i>w</i></span> <i>are</i> linear (actually affine) on the screen</li>
   </ul>
-  <div class="abs eq" data-scale="4.4" data-tex="\frac{f}{w}=k_1\frac{x}{w}+k_2\frac{y}{w}+k_3" style="left:0; width:1920px; top:480px; text-align:center"></div>
-  <ul class="abs bullets" style="left:120px; top:615px; width:1680px">
-    <li>The same for <span class="mr"><i>f</i> = 1</span>: <span class="mr">1/<i>w</i></span> is linear on the screen too. So interpolate both, and divide:</li>
+  <ul class="abs bullets fragment" data-fragment-index="2" style="left:120px; top:640px; width:1680px">
+    <li>So interpolate both with the screen weights, and divide:</li>
   </ul>
-  <div class="abs eq" data-scale="5" data-tex="f=\frac{\alpha f_a/w_a+\beta f_b/w_b+\gamma f_c/w_c}{\alpha/w_a+\beta/w_b+\gamma/w_c}" style="left:0; width:1920px; top:770px; text-align:center"></div>
+  <div class="abs eq fragment" data-fragment-index="2" data-scale="5" data-tex="f(\alpha,\beta,\gamma)=\frac{\alpha f_a/w_a+\beta f_b/w_b+\gamma f_c/w_c}{\alpha/w_a+\beta/w_b+\gamma/w_c}" style="left:0; width:1920px; top:750px; text-align:center"></div>
   <aside class="notes">
-Why does the first line hold? The three vertices of the triangle, as (x, y, w) in clip coordinates, are three linearly independent vectors (unless the triangle is seen exactly edge-on). So there is exactly one linear function k₁x + k₂y + k₃w taking the prescribed values f_a, f_b, f_c at the vertices, and since the points of the triangle are combinations of its vertices, it gives the attribute everywhere on the triangle.
+The problem, from the previous two slides: the rasterizer computes barycentric weights α, β, γ on the screen, from the edge functions. These weights reproduce exactly any quantity that varies linearly across the screen. An attribute such as a texture coordinate varies linearly across the surface of the triangle, and the perspective projection does not preserve that: equal steps on the screen are unequal steps on the surface. So interpolating f with the screen weights is wrong, and the checkerboard bends.
 
-Dividing by w turns x and y into the screen coordinates and leaves a function that is linear on the screen: this is the whole trick. So f/w can be interpolated with the barycentric coordinates computed on the screen, and so can 1/w, the special case f = 1. Their ratio recovers f.
+The key fact, justified on the next slide: f/w and 1/w do vary linearly across the screen, where w is the fourth clip coordinate (the depth along the viewing direction). So the screen weights interpolate both of them exactly.
 
-Here w is the fourth clip coordinate; with the projection matrix of week 3, w = −z_eye, the distance along the viewing direction. This is why the graphics pipeline keeps w around after the projection.
+The solution: interpolate f/w and 1/w, and divide the first by the second, which gives f. Check at a vertex: at p = a we have α = 1, and the formula gives (f_a/w_a)/(1/w_a) = f_a. If all three w are equal, the w's cancel and it reduces to the plain interpolation.
 
-Check at a vertex: at p = a we have α = 1, and the formula gives (f_a/w_a)/(1/w_a) = f_a. If all three w are equal, it reduces to the plain interpolation of the previous slides. It is always done by the GPU; you implement it in the recitation.
+The formula can be read as f = α̂ f_a + β̂ f_b + γ̂ f_c, with corrected weights α̂ = (α/w_a)/D, and so on, where D is the denominator. These are exactly the barycentric coordinates of the point on the 3D triangle, which the screen weights are not. A GPU computes them once per pixel, with one division, and then interpolates every attribute with them. You implement it in the recitation.
+  </aside>
+</section>
+
+<section>
+  <h1 class="title">Why&nbsp;<span class="mr"><i>f</i>/<i>w</i></span>&nbsp;Is Linear on the Screen</h1>
+  <ul class="abs bullets" style="left:120px; top:230px; width:1680px">
+    <li>Before the divide, <span class="mr"><i>f</i></span> is linear in the clip coordinates:</li>
+  </ul>
+  <div class="abs eq" data-scale="4.4" data-tex="f=k_1x+k_2y+k_3w" style="left:0; width:1920px; top:330px; text-align:center"></div>
+  <ul class="abs bullets fragment" data-fragment-index="1" style="left:120px; top:460px; width:1680px">
+    <li>Divide by <span class="mr"><i>w</i></span>; the screen coordinates are <span class="mr"><i>X</i> = <i>x</i>/<i>w</i></span>, <span class="mr"><i>Y</i> = <i>y</i>/<i>w</i></span></li>
+  </ul>
+  <div class="abs eq fragment" data-fragment-index="1" data-scale="4.4" data-tex="\frac{f}{w}=k_1X+k_2Y+k_3" style="left:0; width:1920px; top:550px; text-align:center"></div>
+  <ul class="abs bullets fragment" data-fragment-index="2" style="left:120px; top:720px; width:1680px">
+    <li>The same for <span class="mr"><i>f</i> = 1</span>:</li>
+  </ul>
+  <div class="abs eq fragment" data-fragment-index="2" data-scale="4.4" data-tex="\frac{1}{w}=k_1'X+k_2'Y+k_3'" style="left:0; width:1920px; top:810px; text-align:center"></div>
+  <aside class="notes">
+Optional.
+
+Why the first line holds: the modeling, viewing and projection transformations are one 4 × 4 matrix, applied to (x, y, z, 1). It is linear, and only the division by w that follows is not. A point of the 3D triangle is p = α̂a + β̂b + γ̂c with α̂ + β̂ + γ̂ = 1 (its barycentric coordinates on the surface, not on the screen), and its homogeneous vector is the same combination of the vertices' vectors, so its clip coordinates are the same combination of the vertices' clip coordinates: the triangle keeps its weights in clip space. Take the (x, y, w) part of the three vertices: three vectors in 3D, linearly independent unless the triangle is seen exactly edge-on. Then the weights α̂, β̂, γ̂ are linear functions of (x, y, w), and so is f = α̂ f_a + β̂ f_b + γ̂ f_c. There is no constant term: it is absorbed by the homogeneous coordinate.
+
+Dividing by w turns x and y into the screen coordinates, and turns the k₃w term into a constant: f/w is linear on the screen (strictly, affine). The constant attribute f = 1 is a special case, so 1/w is linear on the screen too.
+
+Here w is the fourth clip coordinate; with the projection matrix of week 3, w = −z_eye, the distance along the viewing direction. This is why the graphics pipeline keeps w around after the projection. The depth stored in the z-buffer, z/w, is linear on the screen for the same reason, so it needs no correction.
   </aside>
 </section>
 
